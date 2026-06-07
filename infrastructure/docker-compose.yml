@@ -1,0 +1,44 @@
+services:
+  # Phase 1: solo Ollama. El chat web es nuestro FastAPI app (scripts/chat_app.py)
+  # en :8090, no Open WebUI — Open WebUI no tiene tools integradas y no encaja
+  # con el agent loop.
+  #
+  # Si quieres Open WebUI para chat sin tools, puedes arrancarlo opcionalmente
+  # con: docker compose --profile webui up
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    # GPU passthrough (NVIDIA Container Toolkit)
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  # Perfil opcional: Open WebUI como chat genérico sin tools
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    restart: unless-stopped
+    profiles: ["webui"]  # NO arranca por defecto
+    ports:
+      - "3000:8080"
+    environment:
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - WEBUI_AUTH=true
+      - WEBUI_SECRET_KEY=change-me-in-prod-this-is-just-for-dev
+    volumes:
+      - open-webui-data:/app/backend/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  ollama-data:
+  open-webui-data:

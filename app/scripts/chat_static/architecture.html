@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI Engineering Portfolio — Arquitectura</title>
+  <style>
+    :root {
+      --bg: #f8f9fc;
+      --text: #1a1a2e;
+      --text-soft: #5a5a7a;
+      --accent: #2D7DD2;
+      --accent2: #6fb1ff;
+      --card: #ffffff;
+      --border: #e4e4ec;
+      --radius: 12px;
+      --shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    [data-theme="dark"] {
+      --bg: #0f1117;
+      --text: #e5e7eb;
+      --text-soft: #9ca3af;
+      --card: #1a1d26;
+      --border: #2d3138;
+      --shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      line-height: 1.6;
+    }
+    .topbar {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 32px;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+    }
+    .topbar h1 { margin: 0; font-size: 16px; font-weight: 600; }
+    .topbar a { color: var(--accent); text-decoration: none; font-size: 13px; }
+    .topbar a:hover { text-decoration: underline; }
+    .theme-btn {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 6px; padding: 5px 10px;
+      cursor: pointer; font-size: 12px; color: var(--text);
+    }
+    .container { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+    h2 { font-size: 20px; font-weight: 600; margin: 0 0 16px; }
+    h3 { font-size: 14px; font-weight: 600; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 12px; }
+    .subtitle { color: var(--text-soft); font-size: 14px; margin: 4px 0 28px; }
+
+    /* Tech badge */
+    .tech-stack { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 28px; }
+    .tech-badge {
+      padding: 5px 12px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--accent);
+    }
+
+    /* Diagram section */
+    .diagram-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin: 0 0 28px;
+      box-shadow: var(--shadow);
+    }
+    .diagram-note {
+      font-size: 12px;
+      color: var(--text-soft);
+      margin-bottom: 16px;
+    }
+
+    /* Mermaid diagram styling */
+    .mermaid {
+      display: flex;
+      justify-content: center;
+    }
+    .mermaid svg { max-width: 100%; height: auto; }
+
+    /* Stats grid */
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin: 0 0 28px; }
+    .stat {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+    .stat .val { font-size: 26px; font-weight: 700; color: var(--accent); line-height: 1; }
+    .stat .label { font-size: 11px; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px; }
+
+    /* Component cards */
+    .components { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+    .comp {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+    .comp .icon { font-size: 22px; margin-bottom: 8px; }
+    .comp h4 { margin: 0 0 6px; font-size: 14px; font-weight: 600; }
+    .comp p { margin: 0; font-size: 12px; color: var(--text-soft); }
+    .comp .port {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 2px 8px;
+      background: var(--bg);
+      border-radius: 4px;
+      font-family: ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--accent);
+    }
+
+    /* Pipeline timeline */
+    .pipeline { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; margin: 0 0 28px; }
+    .phase {
+      flex: 0 0 200px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow);
+      position: relative;
+    }
+    .phase::after {
+      content: "→";
+      position: absolute;
+      right: -14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-soft);
+      font-size: 16px;
+    }
+    .phase:last-child::after { display: none; }
+    .phase .num {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .phase h4 { margin: 4px 0 6px; font-size: 13px; font-weight: 600; }
+    .phase p { margin: 0; font-size: 11px; color: var(--text-soft); }
+    .phase .tag {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 2px 8px;
+      background: #e6f0fb;
+      color: var(--accent);
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+    [data-theme="dark"] .phase .tag { background: #1e2a3a; }
+
+    /* Eval results */
+    .eval-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0 0 28px;
+      font-size: 13px;
+    }
+    .eval-table th, .eval-table td {
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .eval-table th {
+      background: var(--bg);
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-soft);
+    }
+    .eval-table tr:nth-child(even) td { background: var(--bg); }
+    .ok { color: #10b981; font-weight: 600; }
+    .warn { color: #f59e0b; font-weight: 600; }
+
+    /* Chat screenshot */
+    .screenshot-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin: 0 0 28px;
+      box-shadow: var(--shadow);
+    }
+    .screenshot-card img {
+      width: 100%;
+      display: block;
+      border-radius: 0;
+    }
+    .screenshot-card .caption {
+      padding: 10px 16px;
+      font-size: 12px;
+      color: var(--text-soft);
+      border-top: 1px solid var(--border);
+    }
+
+    /* Load test chart */
+    .load-chart { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin: 0 0 28px; box-shadow: var(--shadow); }
+    .bar-row { display: flex; align-items: center; gap: 10px; margin: 6px 0; }
+    .bar-label { width: 80px; font-size: 12px; color: var(--text-soft); flex-shrink: 0; }
+    .bar-bg { flex: 1; background: var(--bg); border-radius: 4px; height: 20px; overflow: hidden; }
+    .bar-fill { height: 100%; background: var(--accent); border-radius: 4px; display: flex; align-items: center; padding: 0 6px; }
+    .bar-fill span { font-size: 11px; color: white; font-weight: 600; white-space: nowrap; }
+    .bar-fill.p95 { background: #f59e0b; }
+    .bar-fill.p99 { background: #ef4444; }
+
+    .divider { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <h1>AI Engineering Portfolio — Arquitectura del Sistema</h1>
+    <div>
+      <a href="http://localhost:8090" target="_blank">Abrir Chat →</a>
+      <button class="theme-btn" onclick="toggleTheme()" style="margin-left:12px">🌓</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <h2>Stack completo en local</h2>
+    <p class="subtitle">MSI Katana GF66 · RTX 3050 4GB · 16GB RAM · Windows 11 · Docker Desktop</p>
+
+    <div class="tech-stack">
+      <span class="tech-badge">Ollama</span>
+      <span class="tech-badge">Qwen2.5-3B-Instruct</span>
+      <span class="tech-badge">Qdrant</span>
+      <span class="tech-badge">Unsloth</span>
+      <span class="tech-badge">FastAPI</span>
+      <span class="tech-badge">Docker</span>
+      <span class="tech-badge">LoRA Fine-tuning</span>
+      <span class="tech-badge">RAG</span>
+      <span class="tech-badge">Tool Calling</span>
+      <span class="tech-badge">GGUF</span>
+      <span class="tech-badge">llama.cpp</span>
+      <span class="tech-badge">ReportLab</span>
+    </div>
+
+    <!-- Architecture Diagram -->
+    <div class="diagram-card">
+      <h3>Diagrama de arquitectura</h3>
+      <div class="mermaid">
+flowchart TB
+    subgraph User["👤 Usuario"]
+        Browser["🌐 Navegador\nhttp://localhost:8090"]
+    end
+
+    subgraph Chat["FastAPI — Chat App (:8090)"]
+        UI["index.html\n(lightweight SPA)"]
+        Agent["agent/run.py\n(agent loop)"]
+        Obs["obs.py\n(observabilidad)"]
+    end
+
+    subgraph Tools["🔧 Tools (registry.py)"]
+        T1["search_docs\n→ RAG API :8000"]
+        T2["list_models\n→ Ollama :11434"]
+        T3["get_gpu_stats\n→ nvidia-smi"]
+        T4["get_collection_info\n→ Qdrant :6333"]
+        T5["plot_metric\n→ matplotlib"]
+        T6["write_document\n→ ReportLab → PDF"]
+    end
+
+    subgraph LLM["🤖 Ollama (:11434)"]
+        Base["qwen2.5:3b\n(base · 1.9GB Q4_K_M)"]
+        FT["qwen2.5-rag-ft\n(LoRA fine-tuned · 1.9GB)"]
+    end
+
+    subgraph RAG["📚 RAG Pipeline"]
+        RAG_API["FastAPI RAG API\n:8000"]
+        Qdrant["Qdrant\n:6333"]
+        Docs["62 chunks\nai_engineering_docs"]
+    end
+
+    subgraph Training["⚡ Training Pipeline"]
+        Data["Golden Q&A\n230 train / 15 test"]
+        Unsloth["Unsloth\nLoRA fine-tuning"]
+        Merge["merge_lora_cpu.py\n(CPU merge → bf16)"]
+        GGUF["llama.cpp\nconvert + quantize Q4_K_M"]
+    end
+
+    subgraph Docs["📄 Documentos"]
+        PDF["data/docs/\n(PDFs generados)"]
+    end
+
+    Browser --> UI --> Agent
+
+    Agent --> T1 & T2 & T3 & T4 & T5 & T6
+    Agent <--> LLM
+    Agent --> Obs
+
+    T1 --> RAG_API --> Qdrant
+    T6 --> PDF
+
+    Training --> FT
+
+    style User fill:#e6f0fb,stroke:#2D7DD2,stroke-width:2px
+    style Chat fill:#f0f4fa,stroke:#2D7DD2,stroke-width:1px
+    style LLM fill:#fff8e1,stroke:#f59e0b,stroke-width:1px
+    style RAG fill:#ecfdf5,stroke:#10b981,stroke-width:1px
+    style Training fill:#fef2f2,stroke:#ef4444,stroke-width:1px
+    style Tools fill:#f8fafc,stroke:#64748b,stroke-width:1px
+    style Docs fill:#f5f3ff,stroke:#7c3aed,stroke-width:1px
+      </div>
+      <p class="diagram-note">Tool calling nativo con Ollama + bucle de ejecución real. Sin LangChain, sin LlamaIndex.</p>
+    </div>
+
+    <!-- Stats -->
+    <h3>Resultados clave</h3>
+    <div class="stats">
+      <div class="stat"><div class="val">68 tok/s</div><div class="label">Throughput base</div></div>
+      <div class="stat"><div class="val">1.9GB</div><div class="label">Modelo Q4_K_M</div></div>
+      <div class="stat"><div class="val">62</div><div class="label">Chunks indexados</div></div>
+      <div class="stat"><div class="val">230</div><div class="label">Ejemplos fine-tuning</div></div>
+      <div class="stat"><div class="val">83%</div><div class="label">Mejora RAG vs base</div></div>
+      <div class="stat"><div class="val">4/4</div><div class="label">Tasks E2E completadas</div></div>
+    </div>
+
+    <!-- Pipeline phases -->
+    <h3>Fases del proyecto</h3>
+    <div class="pipeline">
+      <div class="phase">
+        <div class="num">Phase 1</div>
+        <h4>LLM Serving</h4>
+        <p>Ollama + qwen2.5:3b en Docker. FastAPI chat en :8090. 68 tok/s.</p>
+        <div class="tag">Docker</div>
+      </div>
+      <div class="phase">
+        <div class="num">Phase 2</div>
+        <h4>RAG Pipeline</h4>
+        <p>Qdrant + FastAPI RAG API. 62 chunks. Golden Q&A dataset.</p>
+        <div class="tag">Qdrant</div>
+      </div>
+      <div class="phase">
+        <div class="num">Phase 3</div>
+        <h4>Fine-tuning</h4>
+        <p>Unsloth LoRA. 230 train / 15 test. CPU merge → GGUF Q4_K_M.</p>
+        <div class="tag">Unsloth</div>
+      </div>
+      <div class="phase">
+        <div class="num">Phase 4</div>
+        <h4>Tool Calling</h4>
+        <p>6 tools reales. Bucle agent. 4/4 tasks E2E. Sin LangChain.</p>
+        <div class="tag">Agent loop</div>
+      </div>
+      <div class="phase">
+        <div class="num">Phase 5D</div>
+        <h4>Load Test</h4>
+        <p>3 concurrentes · 12 requests · p50 10s server · 0 fallos.</p>
+        <div class="tag">Observabilidad</div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- Load test results -->
+    <h3>Load test — resultados (3 concurrentes, 12 requests)</h3>
+    <div class="load-chart">
+      <div class="bar-row">
+        <div class="bar-label">p50 (server)</div>
+        <div class="bar-bg"><div class="bar-fill" style="width:17%"><span>10.2s</span></div></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">p95 (server)</div>
+        <div class="bar-bg"><div class="bar-fill p95" style="width:100%"><span>62.2s</span></div></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">p99 (wall)</div>
+        <div class="bar-bg"><div class="bar-fill p99" style="width:100%"><span>92.8s</span></div></div>
+      </div>
+      <div class="bar-row" style="margin-top:12px">
+        <div class="bar-label">Throughput</div>
+        <div class="bar-bg"><div class="bar-fill" style="width:6%;background:#10b981"><span>0.06 r/s</span></div></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Tasa éxito</div>
+        <div class="bar-bg"><div class="bar-fill" style="width:100%;background:#10b981"><span>100%</span></div></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Tool rate</div>
+        <div class="bar-bg"><div class="bar-fill" style="width:100%;background:#7c3aed"><span>1.00 tools/req</span></div></div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- Eval table -->
+    <h3>Evaluación — base vs fine-tuned</h3>
+    <table class="eval-table">
+      <thead>
+        <tr>
+          <th>Métrica</th>
+          <th>Base (qwen2.5:3b)</th>
+          <th>Fine-tuned (qwen2.5-rag-ft)</th>
+          <th>Notas</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Tool call rate</td>
+          <td class="ok">7%</td>
+          <td class="ok">7%</td>
+          <td>Sin regresión</td>
+        </tr>
+        <tr>
+          <td>Iteraciones/task</td>
+          <td>2.2 avg</td>
+          <td class="ok">2.0 avg</td>
+          <td>FT converge más rápido</td>
+        </tr>
+        <tr>
+          <td>Longitud respuesta</td>
+          <td>315 chars</td>
+          <td class="ok">279 chars</td>
+          <td>FT más conciso</td>
+        </tr>
+        <tr>
+          <td>RAG answer relevance</td>
+          <td>base</td>
+          <td class="ok">+83% improvement</td>
+          <td>vs sin RAG baseline</td>
+        </tr>
+        <tr>
+          <td>E2E task completion</td>
+          <td>—</td>
+          <td class="ok">4/4</td>
+          <td>Multi-step tool chaining</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <hr class="divider">
+
+    <!-- Components -->
+    <h3>Componentes</h3>
+    <div class="components">
+      <div class="comp">
+        <div class="icon">🔍</div>
+        <h4>RAG API (:8000)</h4>
+        <p>FastAPI + sentence-transformers. Busca en Qdrant y responde con contexto.</p>
+        <div class="port">:8000</div>
+      </div>
+      <div class="comp">
+        <div class="icon">🧠</div>
+        <h4>Ollama (:11434)</h4>
+        <p>Motor LLM. qwen2.5:3b base y qwen2.5-rag-ft fine-tuned. 68 tok/s.</p>
+        <div class="port">:11434</div>
+      </div>
+      <div class="comp">
+        <div class="icon">🗄️</div>
+        <h4>Qdrant (:6333)</h4>
+        <p>Vector DB con 62 chunks indexados del dominio AI engineering stack.</p>
+        <div class="port">:6333</div>
+      </div>
+      <div class="comp">
+        <div class="icon">🤖</div>
+        <h4>Agent Loop</h4>
+        <p>Bucle abierto: Ollama → parse tool_calls → ejecuta → feedback. Sin LangChain.</p>
+        <div class="port">scripts/agent/run.py</div>
+      </div>
+      <div class="comp">
+        <div class="icon">📊</div>
+        <h4>Observabilidad</h4>
+        <p>obs.py envuelve el agent loop y escribe JSONL con timing, VRAM, errores.</p>
+        <div class="port">data/obs/events.jsonl</div>
+      </div>
+      <div class="comp">
+        <div class="icon">📄</div>
+        <h4>PDF Generator</h4>
+        <p>Tool write_document genera PDFs con ReportLab. 4 plantillas.</p>
+        <div class="port">data/docs/*.pdf</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({ startOnLoad: true, theme: 'base', themeVariables: {
+      primaryColor: '#e6f0fb',
+      primaryTextColor: '#1a1a2e',
+      primaryBorderColor: '#2D7DD2',
+      lineColor: '#9ca3af',
+      secondaryColor: '#f0f2f5',
+      tertiaryColor: '#f8f9fc',
+    }});
+
+    (function () {
+      const saved = localStorage.getItem('arch-theme') ||
+        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', saved);
+    })();
+
+    function toggleTheme() {
+      const cur = document.documentElement.getAttribute('data-theme');
+      const next = cur === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('arch-theme', next);
+    }
+  </script>
+</body>
+</html>

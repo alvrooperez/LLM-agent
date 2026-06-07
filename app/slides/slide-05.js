@@ -1,0 +1,19 @@
+function createSlide(pres, theme) {
+  const slide = pres.addSlide();
+  slide.addShape(pres.shapes.RECTANGLE, { x: 0, y: 0, w: 10, h: 5.625, fill: { color: theme.bg } });
+  slide.addText("02", {
+    x: 0.5, y: 1.2, w: 3, h: 1.8,
+    fontSize: 120, bold: true, color: theme.accent, fontFace: "Arial", transparency: 15
+  });
+  slide.addText("RAG Pipeline", {
+    x: 0.5, y: 2.5, w: 9, h: 0.9,
+    fontSize: 42, bold: true, color: theme.primary, fontFace: "Arial"
+  });
+  slide.addShape(pres.shapes.RECTANGLE, { x: 0.5, y: 3.5, w: 2.5, h: 0.05, fill: { color: theme.accent } });
+  slide.addText("Retrieval-Augmented Generation over AI engineering documentation", {
+    x: 0.5, y: 3.7, w: 9, h: 0.4,
+    fontSize: 14, color: theme.secondary, fontFace: "Arial"
+  });
+  slide.addText("05", { x: 9.3, y: 5.1, w: 0.5, h: 0.35, fontSize: 10, color: theme.secondary, fontFace: "Arial" });
+}
+module.exports = { createSlide };

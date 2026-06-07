@@ -1,0 +1,49 @@
+services:
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: qdrant
+    restart: unless-stopped
+    ports:
+      - "6333:6333"   # REST API
+      - "6334:6334"   # gRPC API
+    volumes:
+      - qdrant-data:/qdrant/storage
+
+  # Ingesta: descarga docs, embebe, indexa en Qdrant. Corre una vez y sale.
+  # Re-ejecutable: docker compose up rag-bootstrap
+  rag-bootstrap:
+    build: .
+    image: ai-engineer-rag:latest
+    container_name: rag-bootstrap
+    depends_on:
+      - qdrant
+    environment:
+      - QDRANT_URL=http://qdrant:6333
+    volumes:
+      - ./scripts:/app/scripts   # editable desde host
+      - ./data:/app/data         # descargas + cache visibles desde host
+    command: sh -c "sleep 5 && python scripts/ingest.py"
+    restart: "no"
+
+  # Servicio RAG: recibe preguntas, busca en Qdrant, llama a Ollama
+  rag-api:
+    build: .
+    image: ai-engineer-rag:latest
+    container_name: rag-api
+    restart: unless-stopped
+    depends_on:
+      - qdrant
+    environment:
+      - QDRANT_URL=http://qdrant:6333
+      - OLLAMA_URL=http://host.docker.internal:11434
+      - OLLAMA_MODEL=qwen2.5:3b
+    volumes:
+      - ./scripts:/app/scripts
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command: uvicorn scripts.api:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+
+volumes:
+  qdrant-data:

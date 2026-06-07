@@ -1,0 +1,128 @@
+# Docker Compose raíz del proyecto.
+# Arranca TODO el stack (Ollama + Qdrant + RAG API + Chat App) con un comando.
+#
+# Uso:
+#   docker compose up -d           # arranca todo
+#   docker compose logs -f         # ver logs
+#   docker compose down            # parar todo
+#
+# Requisitos:
+#   - Docker Desktop con WSL2 (Windows) o Docker Engine (Linux)
+#   - NVIDIA Container Toolkit (para GPU passthrough)
+#   - Driver NVIDIA actualizado
+#
+# Tras arrancar, en otra terminal:
+#   ollama pull qwen2.5:3b         # descargar el modelo base (una vez)
+#   ollama pull qwen2.5-rag-ft     # descargar el modelo fine-tuned (opcional)
+#   # Poblar Qdrant:
+#   docker compose run --rm rag-bootstrap
+#   # Abrir chat: http://localhost:8090
+#
+# Notas de diseno:
+#   - Ollama en red del host (host.docker.internal) para que RAG API
+#     y chat app lo alcancen sin re-publicar puertos.
+#   - Chat app bind a 0.0.0.0:8090, accesible desde el navegador del host.
+#   - rag-bootstrap es un servicio one-shot (restart: no) que corre y sale.
+#   - Bind mounts en scripts/ y data/ para iterar sin rebuild.
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: aieng-ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: aieng-qdrant
+    restart: unless-stopped
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant-data:/qdrant/storage
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/collections"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 15s
+
+  # RAG API (FastAPI)
+  rag-api:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    image: aieng-rag:latest
+    container_name: aieng-rag-api
+    restart: unless-stopped
+    depends_on:
+      qdrant:
+        condition: service_healthy
+    environment:
+      - QDRANT_URL=http://qdrant:6333
+      - OLLAMA_URL=http://host.docker.internal:11434
+      - OLLAMA_MODEL=qwen2.5:3b
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command: uvicorn scripts.api:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+
+  # Bootstrap: descarga docs, embebe, indexa en Qdrant. One-shot.
+  rag-bootstrap:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    image: aieng-rag:latest
+    container_name: aieng-rag-bootstrap
+    depends_on:
+      qdrant:
+        condition: service_healthy
+    environment:
+      - QDRANT_URL=http://qdrant:6333
+    volumes:
+      - ./app/scripts:/app/scripts
+      - ./app/data:/app/data
+    command: sh -c "sleep 3 && python scripts/ingest.py"
+    restart: "no"
+    profiles: ["bootstrap"]
+
+  # Chat app (FastAPI + SPA)
+  chat-app:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    image: aieng-chat:latest
+    container_name: aieng-chat-app
+    restart: unless-stopped
+    depends_on:
+      rag-api:
+        condition: service_started
+    environment:
+      - ALLOWED_ORIGINS=http://localhost:8090
+      - RAG_API_URL=http://rag-api:8000
+    ports:
+      - "8090:8090"
+    volumes:
+      - ./app/scripts:/app/scripts
+      - ./app/data:/app/data
+
+volumes:
+  ollama-data:
+  qdrant-data:

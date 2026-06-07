@@ -1,0 +1,74 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+build/
+dist/
+*.egg
+
+# Unsloth compiled cache (huge, regenerable)
+**/unsloth_compiled_cache/
+
+# Virtualenvs
+.venv/
+venv/
+.venv-train/
+__pycache__/
+
+# pytest
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Node (PptxGenJS for slides)
+**/node_modules/
+**/package-lock.json
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Data (large, regenerable)
+**/data/obs/
+**/data/docs/*.pdf
+**/data/load_test_results.json
+**/data/eval_chain_results.json
+**/data/rag_latency.json
+**/data/capacity_test_results.json
+**/data/finetune/
+# Eval reports and training data are regenerable, skip to keep repo light
+**/data/eval/reports/
+**/data/eval/golden_qa.jsonl
+# Raw scraped docs (input to RAG, regenerable)
+**/data/raw/
+# Keep eval_chain_results.json and ab_agent_eval.json for portfolio demo
+
+# Models (large binary, regenerable)
+*.gguf
+*.bin
+*.safetensors
+models/
+
+# PPTX output (kept in repo for demo; regenerate with `node slides/compile.js`)
+# **/slides/output/
+
+# Local data
+**/data/finetune/gguf/
+**/data/finetune/full_model*/
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+desktop.ini
