@@ -4,7 +4,7 @@ function createSlide(pres, theme) {
   slide.addShape(pres.shapes.RECTANGLE, { x: 0, y: 0, w: 10, h: 0.08, fill: { color: theme.accent } });
   slide.addText("Key Takeaways", {
     x: 0.5, y: 0.3, w: 9, h: 0.7,
-    fontSize: 36, bold: true, color: theme.primary, fontFace: "Arial"
+    fontSize: 36, bold: true, color: theme.primary, fontFace: "Segoe UI"
   });
   slide.addShape(pres.shapes.RECTANGLE, { x: 0.5, y: 0.95, w: 1.8, h: 0.05, fill: { color: theme.accent } });
 
@@ -45,15 +45,15 @@ function createSlide(pres, theme) {
     });
     slide.addText(t.icon, {
       x: 0.5, y: y + 0.08, w: 0.5, h: 0.5,
-      fontSize: 12, bold: true, color: theme.bg, align: "center", valign: "middle", fontFace: "Arial"
+      fontSize: 12, bold: true, color: theme.bg, align: "center", valign: "middle", fontFace: "Segoe UI"
     });
     slide.addText(t.title, {
       x: 1.15, y: y + 0.05, w: 8.3, h: 0.32,
-      fontSize: 14, bold: true, color: theme.primary, fontFace: "Arial"
+      fontSize: 14, bold: true, color: theme.primary, fontFace: "Segoe UI"
     });
     slide.addText(t.body, {
       x: 1.15, y: y + 0.38, w: 8.3, h: 0.38,
-      fontSize: 11, color: theme.secondary, fontFace: "Arial"
+      fontSize: 11, color: theme.secondary, fontFace: "Segoe UI"
     });
   });
 
@@ -61,7 +61,7 @@ function createSlide(pres, theme) {
   slide.addShape(pres.shapes.RECTANGLE, { x: 0, y: 5.2, w: 10, h: 0.425, fill: { color: theme.light } });
   slide.addText("Demo: http://localhost:8090  |  Architecture: http://localhost:8090/architecture  |  Source: phase-2-rag/", {
     x: 0.5, y: 5.2, w: 9, h: 0.425,
-    fontSize: 10, color: theme.secondary, valign: "middle", fontFace: "Arial"
+    fontSize: 10, color: theme.secondary, valign: "middle", fontFace: "Segoe UI"
   });
 }
 module.exports = { createSlide };

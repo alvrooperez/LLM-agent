@@ -5,7 +5,7 @@ function createSlide(pres, theme) {
   // Title
   slide.addText("Contents", {
     x: 0.5, y: 0.35, w: 9, h: 0.7,
-    fontSize: 36, bold: true, color: theme.primary, fontFace: "Arial"
+    fontSize: 36, bold: true, color: theme.primary, fontFace: "Segoe UI"
   });
   slide.addShape(pres.shapes.RECTANGLE, { x: 0.5, y: 1.0, w: 1.5, h: 0.04, fill: { color: theme.accent } });
 
@@ -22,23 +22,23 @@ function createSlide(pres, theme) {
     // Number
     slide.addText(s.num, {
       x: 0.5, y: y, w: 0.7, h: 0.6,
-      fontSize: 28, bold: true, color: theme.accent, fontFace: "Arial"
+      fontSize: 28, bold: true, color: theme.accent, fontFace: "Segoe UI"
     });
     // Line
     slide.addShape(pres.shapes.RECTANGLE, { x: 1.3, y: y + 0.28, w: 0.4, h: 0.03, fill: { color: theme.light } });
     // Title
     slide.addText(s.title, {
       x: 1.85, y: y, w: 7, h: 0.38,
-      fontSize: 18, bold: true, color: theme.primary, fontFace: "Arial"
+      fontSize: 18, bold: true, color: theme.primary, fontFace: "Segoe UI"
     });
     // Desc
     slide.addText(s.desc, {
       x: 1.85, y: y + 0.36, w: 7, h: 0.3,
-      fontSize: 12, color: theme.secondary, fontFace: "Arial"
+      fontSize: 12, color: theme.secondary, fontFace: "Segoe UI"
     });
   });
 
   // Page number
-  slide.addText("02", { x: 9.3, y: 5.1, w: 0.5, h: 0.35, fontSize: 10, color: theme.secondary, fontFace: "Arial" });
+  slide.addText("02", { x: 9.3, y: 5.1, w: 0.5, h: 0.35, fontSize: 10, color: theme.secondary, fontFace: "Segoe UI" });
 }
 module.exports = { createSlide };

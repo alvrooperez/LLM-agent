@@ -4,7 +4,7 @@ function createSlide(pres, theme) {
   slide.addShape(pres.shapes.RECTANGLE, { x: 0, y: 0, w: 10, h: 0.06, fill: { color: theme.accent } });
   slide.addText("RAG Pipeline - Results", {
     x: 0.5, y: 0.25, w: 9, h: 0.6,
-    fontSize: 28, bold: true, color: theme.primary, fontFace: "Arial"
+    fontSize: 28, bold: true, color: theme.primary, fontFace: "Segoe UI"
   });
 
   // Big stat callouts
@@ -22,22 +22,22 @@ function createSlide(pres, theme) {
     });
     slide.addText(s.val, {
       x: x, y: 1.05, w: 2.15, h: 0.85,
-      fontSize: 40, bold: true, color: theme.accent, align: "center", fontFace: "Arial"
+      fontSize: 40, bold: true, color: theme.accent, align: "center", fontFace: "Segoe UI"
     });
     slide.addText(s.label, {
       x: x + 0.1, y: 1.9, w: 1.95, h: 0.35,
-      fontSize: 12, bold: true, color: theme.primary, align: "center", fontFace: "Arial"
+      fontSize: 12, bold: true, color: theme.primary, align: "center", fontFace: "Segoe UI"
     });
     slide.addText(s.sub, {
       x: x + 0.1, y: 2.22, w: 1.95, h: 0.35,
-      fontSize: 10, color: theme.secondary, align: "center", fontFace: "Arial"
+      fontSize: 10, color: theme.secondary, align: "center", fontFace: "Segoe UI"
     });
   });
 
   // Pipeline flow
   slide.addText("Pipeline", {
     x: 0.5, y: 2.9, w: 9, h: 0.35,
-    fontSize: 13, bold: true, color: theme.accent, fontFace: "Arial"
+    fontSize: 13, bold: true, color: theme.accent, fontFace: "Segoe UI"
   });
   const steps = ["Docs", "Scrape", "Embed", "Qdrant", "Retrieve", "Generate"];
   steps.forEach((s, i) => {
@@ -48,12 +48,12 @@ function createSlide(pres, theme) {
     });
     slide.addText(s, {
       x: x, y: 3.3, w: 1.35, h: 0.55,
-      fontSize: 11, bold: true, color: theme.primary, align: "center", valign: "middle", fontFace: "Arial"
+      fontSize: 11, bold: true, color: theme.primary, align: "center", valign: "middle", fontFace: "Segoe UI"
     });
     if (i < steps.length - 1) {
       slide.addText("->", {
         x: x + 1.35, y: 3.3, w: 0.2, h: 0.55,
-        fontSize: 14, color: theme.accent, align: "center", valign: "middle", fontFace: "Arial"
+        fontSize: 14, color: theme.accent, align: "center", valign: "middle", fontFace: "Segoe UI"
       });
     }
   });
@@ -62,12 +62,12 @@ function createSlide(pres, theme) {
   slide.addShape(pres.shapes.RECTANGLE, { x: 0.5, y: 4.1, w: 9, h: 1.2, fill: { color: theme.light }, rectRadius: 0.08 });
   slide.addText("Golden Q&A Dataset + LLM-as-Judge", {
     x: 0.7, y: 4.2, w: 8.6, h: 0.35,
-    fontSize: 13, bold: true, color: theme.primary, fontFace: "Arial"
+    fontSize: 13, bold: true, color: theme.primary, fontFace: "Segoe UI"
   });
   slide.addText("Curated question-answer pairs from real technical documentation. LLM judges answer quality on a 1-5 scale. RAG pipeline evaluated against baseline (no retrieval) using the same judge model.", {
     x: 0.7, y: 4.55, w: 8.6, h: 0.65,
-    fontSize: 11, color: theme.secondary, fontFace: "Arial"
+    fontSize: 11, color: theme.secondary, fontFace: "Segoe UI"
   });
-  slide.addText("06", { x: 9.3, y: 5.1, w: 0.5, h: 0.35, fontSize: 10, color: theme.secondary, fontFace: "Arial" });
+  slide.addText("06", { x: 9.3, y: 5.1, w: 0.5, h: 0.35, fontSize: 10, color: theme.secondary, fontFace: "Segoe UI" });
 }
 module.exports = { createSlide };

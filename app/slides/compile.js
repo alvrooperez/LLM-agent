@@ -2,13 +2,14 @@ const pptxgen = require('pptxgenjs');
 const pres = new pptxgen();
 pres.layout = 'LAYOUT_16x9';
 
-// Tech & Night palette (deep blue + gold)
+// Modern Tech & Cyberpunk palette (Space Dark + Neon Cyan + Clean Slate)
 const theme = {
-  primary:   'ffd60a',   // Gold - main text on dark bg
-  secondary: '9a8c98',   // Muted - secondary text
-  accent:    'ffc300',   // Bright gold - accents, highlights
-  light:     '001d3d',   // Card/panel background
-  bg:        '000814',   // Slide background
+  primary:   'F8FAFC',   // Clean Off-white - main text
+  secondary: '94A3B8',   // Slate Gray - secondary text
+  accent:    '00EAFF',   // Neon Cyan - accents and highlights
+  accent2:   'BD00FF',   // Neon Purple - accents
+  light:     '0F172A',   // Slate Blue - card/panel background
+  bg:        '020617',   // Deepest Space Blue - slide background
 };
 
 const slides = [
@@ -32,6 +33,6 @@ for (const mod of slides) {
   mod.createSlide(pres, theme);
 }
 
-pres.writeFile({ fileName: 'C:/Users/aborb/.minimax-agent/projects/ai-engineer-portfolio/phase-2-rag/slides/output/ai-engineering-portfolio.pptx' })
+pres.writeFile({ fileName: 'C:/Users/aborb/.minimax-agent/projects/ai-engineer-portfolio/app/slides/output/ai-engineering-portfolio.pptx' })
   .then(() => console.log('Written: output/ai-engineering-portfolio.pptx'))
   .catch(e => { console.error(e); process.exit(1); });

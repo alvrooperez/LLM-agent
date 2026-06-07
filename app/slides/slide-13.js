@@ -4,11 +4,11 @@ function createSlide(pres, theme) {
   slide.addShape(pres.shapes.RECTANGLE, { x: 0, y: 0, w: 10, h: 0.06, fill: { color: theme.accent } });
   slide.addText("Capacity Test - Max Concurrent Users", {
     x: 0.5, y: 0.25, w: 9, h: 0.6,
-    fontSize: 28, bold: true, color: theme.primary, fontFace: "Arial"
+    fontSize: 28, bold: true, color: theme.primary, fontFace: "Segoe UI"
   });
   slide.addText("Escalating load: 1 -> 2 -> 3 -> 4 concurrent users until failure or p50 > 60s", {
     x: 0.5, y: 0.85, w: 9, h: 0.3,
-    fontSize: 11, color: theme.secondary, fontFace: "Arial"
+    fontSize: 11, color: theme.secondary, fontFace: "Segoe UI"
   });
 
   // Results table
@@ -33,7 +33,7 @@ function createSlide(pres, theme) {
       slide.addText(cell, {
         x: 0.5 + ci * colW[ci] + 0.08, y: y, w: colW[ci] - 0.12, h: 0.5,
         fontSize: isH ? 11 : 12, bold: isH, color: c,
-        fontFace: "Arial", valign: "middle"
+        fontFace: "Segoe UI", valign: "middle"
       });
     });
   });
@@ -41,7 +41,7 @@ function createSlide(pres, theme) {
   // Conclusion cards
   slide.addText("Conclusions", {
     x: 0.5, y: 3.85, w: 9, h: 0.35,
-    fontSize: 13, bold: true, color: theme.accent, fontFace: "Arial"
+    fontSize: 13, bold: true, color: theme.accent, fontFace: "Segoe UI"
   });
   const conclusions = [
     { val: "4", label: "Max concurrent users", sub: "before p50 exceeds 60s" },
@@ -51,11 +51,11 @@ function createSlide(pres, theme) {
   conclusions.forEach((c, i) => {
     const x = 0.5 + i * 3.1;
     slide.addShape(pres.shapes.RECTANGLE, { x: x, y: 4.2, w: 2.9, h: 1.05, fill: { color: theme.light }, rectRadius: 0.08 });
-    slide.addText(c.val, { x: x + 0.15, y: 4.25, w: 2.6, h: 0.45, fontSize: 26, bold: true, color: theme.accent, fontFace: "Arial" });
-    slide.addText(c.label, { x: x + 0.15, y: 4.7, w: 2.6, h: 0.25, fontSize: 11, bold: true, color: theme.primary, fontFace: "Arial" });
-    slide.addText(c.sub, { x: x + 0.15, y: 4.95, w: 2.6, h: 0.2, fontSize: 9, color: theme.secondary, fontFace: "Arial" });
+    slide.addText(c.val, { x: x + 0.15, y: 4.25, w: 2.6, h: 0.45, fontSize: 26, bold: true, color: theme.accent, fontFace: "Segoe UI" });
+    slide.addText(c.label, { x: x + 0.15, y: 4.7, w: 2.6, h: 0.25, fontSize: 11, bold: true, color: theme.primary, fontFace: "Segoe UI" });
+    slide.addText(c.sub, { x: x + 0.15, y: 4.95, w: 2.6, h: 0.2, fontSize: 9, color: theme.secondary, fontFace: "Segoe UI" });
   });
 
-  slide.addText("13", { x: 9.3, y: 5.1, w: 0.5, h: 0.35, fontSize: 10, color: theme.secondary, fontFace: "Arial" });
+  slide.addText("13", { x: 9.3, y: 5.1, w: 0.5, h: 0.35, fontSize: 10, color: theme.secondary, fontFace: "Segoe UI" });
 }
 module.exports = { createSlide };

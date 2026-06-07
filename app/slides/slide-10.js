@@ -4,7 +4,7 @@ function createSlide(pres, theme) {
   slide.addShape(pres.shapes.RECTANGLE, { x: 0, y: 0, w: 10, h: 0.06, fill: { color: theme.accent } });
   slide.addText("6 Tools with Real Backends", {
     x: 0.5, y: 0.25, w: 9, h: 0.6,
-    fontSize: 28, bold: true, color: theme.primary, fontFace: "Arial"
+    fontSize: 28, bold: true, color: theme.primary, fontFace: "Segoe UI"
   });
 
   const tools = [
@@ -28,7 +28,7 @@ function createSlide(pres, theme) {
     // Tool name
     slide.addText(t.name, {
       x: x + 0.15, y: y + 0.12, w: 2.6, h: 0.35,
-      fontSize: 12, bold: true, color: theme.accent, fontFace: "Arial"
+      fontSize: 12, bold: true, color: theme.accent, fontFace: "Segoe UI"
     });
     // Backend badge
     slide.addShape(pres.shapes.RECTANGLE, {
@@ -37,28 +37,28 @@ function createSlide(pres, theme) {
     });
     slide.addText(t.backend, {
       x: x + 0.15, y: y + 0.48, w: 1.6, h: 0.3,
-      fontSize: 9, bold: true, color: theme.primary, align: "center", valign: "middle", fontFace: "Arial"
+      fontSize: 9, bold: true, color: theme.primary, align: "center", valign: "middle", fontFace: "Segoe UI"
     });
     slide.addText(t.desc, {
       x: x + 0.15, y: y + 0.85, w: 2.6, h: 0.4,
-      fontSize: 10, color: theme.secondary, fontFace: "Arial"
+      fontSize: 10, color: theme.secondary, fontFace: "Segoe UI"
     });
   });
 
   // Agent loop diagram
   slide.addText("Agent Loop", {
     x: 0.5, y: 4.15, w: 9, h: 0.3,
-    fontSize: 13, bold: true, color: theme.accent, fontFace: "Arial"
+    fontSize: 13, bold: true, color: theme.accent, fontFace: "Segoe UI"
   });
   const loop = ["Ollama", "Parse tools", "Execute", "Feedback", "Repeat"];
   loop.forEach((s, i) => {
     const x = 0.5 + i * 1.85;
     slide.addShape(pres.shapes.RECTANGLE, { x: x, y: 4.5, w: 1.6, h: 0.45, fill: { color: theme.light }, rectRadius: 0.06 });
-    slide.addText(s, { x: x, y: 4.5, w: 1.6, h: 0.45, fontSize: 10, bold: true, color: theme.primary, align: "center", valign: "middle", fontFace: "Arial" });
+    slide.addText(s, { x: x, y: 4.5, w: 1.6, h: 0.45, fontSize: 10, bold: true, color: theme.primary, align: "center", valign: "middle", fontFace: "Segoe UI" });
     if (i < loop.length - 1) {
-      slide.addText("->", { x: x + 1.6, y: 4.5, w: 0.25, h: 0.45, fontSize: 12, color: theme.accent, align: "center", valign: "middle", fontFace: "Arial" });
+      slide.addText("->", { x: x + 1.6, y: 4.5, w: 0.25, h: 0.45, fontSize: 12, color: theme.accent, align: "center", valign: "middle", fontFace: "Segoe UI" });
     }
   });
-  slide.addText("10", { x: 9.3, y: 5.1, w: 0.5, h: 0.35, fontSize: 10, color: theme.secondary, fontFace: "Arial" });
+  slide.addText("10", { x: 9.3, y: 5.1, w: 0.5, h: 0.35, fontSize: 10, color: theme.secondary, fontFace: "Segoe UI" });
 }
 module.exports = { createSlide };

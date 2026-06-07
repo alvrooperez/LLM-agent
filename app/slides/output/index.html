@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Engineering Portfolio — Presentación Interactiva</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #090d16;
+            --bg-card: rgba(15, 23, 42, 0.75);
+            --border-glow: rgba(0, 234, 255, 0.25);
+            --border-glow-purple: rgba(189, 0, 255, 0.25);
+            --neon-blue: #00EAFF;
+            --neon-purple: #bd00ff;
+            --neon-green: #10b981;
+            --neon-orange: #f59e0b;
+            --neon-red: #ef4444;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --font-main: 'Outfit', sans-serif;
+            --font-mono: 'Fira Code', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-image: 
+                radial-gradient(circle at 5% 10%, rgba(0, 234, 255, 0.04) 0%, transparent 35%),
+                radial-gradient(circle at 95% 90%, rgba(189, 0, 255, 0.06) 0%, transparent 40%),
+                linear-gradient(rgba(0, 234, 255, 0.01) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 234, 255, 0.01) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+        }
+
+        /* Presentation Wrapper */
+        .presentation-container {
+            position: relative;
+            flex-grow: 1;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Slide Styles */
+        .slide {
+            position: absolute;
+            width: 90%;
+            max-width: 1200px;
+            height: 80vh;
+            max-height: 750px;
+            padding: 40px;
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glow);
+            border-radius: 20px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 50px rgba(0, 234, 255, 0.03);
+            opacity: 0;
+            transform: scale(0.96) translateY(15px);
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+            pointer-events: auto;
+            z-index: 10;
+        }
+
+        /* Accent bar styling */
+        .slide::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 6px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--neon-blue), var(--neon-purple));
+            border-radius: 20px 0 0 20px;
+        }
+
+        /* Typography */
+        h1.title-large {
+            font-size: 3.8rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: -2px;
+            background: linear-gradient(135deg, #fff 40%, var(--neon-blue) 80%, var(--neon-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(0, 234, 255, 0.08);
+            line-height: 1.1;
+            margin-bottom: 15px;
+        }
+
+        h2.title-slide {
+            font-size: 2.2rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: -1px;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 15px;
+        }
+
+        h2.title-slide span.slide-num {
+            font-family: var(--font-mono);
+            font-size: 1rem;
+            color: var(--neon-blue);
+            background: rgba(0, 234, 255, 0.08);
+            padding: 4px 12px;
+            border-radius: 30px;
+            border: 1px solid var(--border-glow);
+            letter-spacing: 0;
+        }
+
+        .subtitle {
+            font-size: 1.3rem;
+            color: var(--neon-blue);
+            font-family: var(--font-mono);
+            margin-bottom: 25px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        p.description {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        /* Grids & Cards Layout */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            flex-grow: 1;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .content-grid::-webkit-scrollbar {
+            width: 6px;
+        }
+        .content-grid::-webkit-scrollbar-thumb {
+            background: rgba(0, 234, 255, 0.15);
+            border-radius: 4px;
+        }
+
+        .full-width-content {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .tech-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .tech-card:hover {
+            background: rgba(0, 234, 255, 0.015);
+            border-color: var(--border-glow);
+            transform: translateY(-2px);
+        }
+
+        .tech-card h3 {
+            font-size: 1.25rem;
+            color: var(--neon-blue);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tech-card h3.purple-title {
+            color: var(--neon-purple);
+        }
+
+        .tech-card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .tech-card ul {
+            list-style: none;
+            margin-top: 10px;
+        }
+
+        .tech-card ul li {
+            font-size: 0.9rem;
+            color: var(--text-main);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tech-card ul li::before {
+            content: "▹";
+            color: var(--neon-blue);
+            font-weight: bold;
+        }
+
+        /* Tables */
+        .neon-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: var(--font-main);
+            margin-top: 5px;
+        }
+
+        .neon-table th {
+            text-align: left;
+            padding: 10px 14px;
+            background: rgba(0, 234, 255, 0.08);
+            color: var(--neon-blue);
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            border-bottom: 2px solid var(--border-glow);
+        }
+
+        .neon-table td {
+            padding: 10px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.9rem;
+            color: var(--text-main);
+        }
+
+        .neon-table tr:hover td {
+            background: rgba(255, 255, 255, 0.015);
+            color: #fff;
+        }
+
+        /* Controls */
+        .controls-overlay {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: rgba(10, 15, 26, 0.85);
+            border: 1px solid var(--border-glow);
+            padding: 10px 24px;
+            border-radius: 40px;
+            backdrop-filter: blur(10px);
+            z-index: 100;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .control-btn {
+            background: none;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            border-color: var(--neon-blue);
+            color: var(--neon-blue);
+            background: rgba(0, 234, 255, 0.04);
+            box-shadow: 0 0 10px rgba(0, 234, 255, 0.15);
+        }
+
+        .slide-indicator {
+            font-family: var(--font-mono);
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .slide-indicator span {
+            color: var(--neon-blue);
+            font-weight: bold;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            z-index: 200;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple));
+            transition: width 0.3s ease;
+            box-shadow: 0 0 8px var(--neon-blue);
+        }
+
+        /* SVG DIAGRAM STYLES */
+        .diagram-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            position: relative;
+        }
+
+        .interactive-node {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .interactive-node:hover {
+            filter: drop-shadow(0 0 8px var(--neon-blue));
+            transform: scale(1.02);
+            transform-origin: center;
+        }
+
+        .interactive-node.active-node {
+            filter: drop-shadow(0 0 12px var(--neon-green));
+        }
+
+        .flow-line {
+            stroke-dasharray: 8;
+            animation: dash 20s linear infinite;
+        }
+
+        @keyframes dash {
+            to {
+                stroke-dashoffset: -1000;
+            }
+        }
+
+        /* Slide-Specific Custom Elements */
+        .tech-list-inline {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .tech-tag {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            background: rgba(0, 234, 255, 0.06);
+            border: 1px solid var(--border-glow);
+            color: var(--neon-blue);
+            padding: 4px 10px;
+            border-radius: 5px;
+        }
+
+        .tech-tag.purple {
+            background: rgba(189, 0, 255, 0.06);
+            border-color: var(--border-glow-purple);
+            color: var(--neon-purple);
+        }
+
+        /* Quick Info Bar for Title */
+        .title-meta {
+            display: flex;
+            gap: 30px;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .meta-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 4px;
+        }
+
+        .meta-value {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        /* Index List */
+        .index-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .index-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.015);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .index-item:hover {
+            border-color: var(--neon-blue);
+            background: rgba(0, 234, 255, 0.02);
+            transform: translateX(5px);
+        }
+
+        .index-num {
+            font-family: var(--font-mono);
+            font-size: 1.1rem;
+            color: var(--neon-blue);
+            font-weight: bold;
+        }
+
+        .index-text {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        /* Help tip */
+        .help-tip {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            background: rgba(0,0,0,0.4);
+            padding: 6px 12px;
+            border-radius: 4px;
+            border: 1px solid rgba(255,255,255,0.05);
+            z-index: 150;
+        }
+
+        /* Detail Panel */
+        .detail-panel {
+            background: rgba(4, 9, 20, 0.92);
+            border: 1px solid var(--border-glow);
+            border-radius: 10px;
+            padding: 15px;
+            font-size: 0.9rem;
+            margin-top: 15px;
+            display: none;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+
+        .detail-panel.visible {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* Big numbers / Stat grid */
+        .stat-grid-horizontal {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card-large {
+            background: rgba(255, 255, 255, 0.015);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card-large:hover {
+            border-color: var(--border-glow);
+            background: rgba(0, 234, 255, 0.01);
+        }
+
+        .stat-value {
+            font-size: 2.4rem;
+            font-weight: 800;
+            color: var(--neon-blue);
+            margin-bottom: 5px;
+            letter-spacing: -1px;
+            font-family: var(--font-mono);
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-main);
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+
+        .stat-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Latency bars representation */
+        .latency-chart {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .latency-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .latency-label {
+            width: 45px;
+            font-family: var(--font-mono);
+            font-weight: bold;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .latency-bar-bg {
+            flex-grow: 1;
+            height: 24px;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 5px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .latency-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 1s ease;
+        }
+
+        .latency-value {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <div class="help-tip">
+        [←] [→] [Espacio] para navegar
+    </div>
+
+    <div class="presentation-container">
+
+        <!-- SLIDE 1: PORTADA -->
+        <div class="slide active" id="slide-1">
+            <div style="display: flex; flex-direction: column; justify-content: center; height: 100%;">
+                <div class="subtitle">AI ENGINEERING PORTFOLIO</div>
+                <h1 class="title-large">LOCAL LLM STACK</h1>
+                <div class="subtitle" style="color: var(--neon-purple); margin-bottom: 25px;">RAG, FINE-TUNING & TOOL CALLING</div>
+                <p class="description" style="max-width: 850px; font-size: 1.15rem; margin-bottom: 30px;">
+                    Demostración de ingeniería de IA implementada al 100% de manera local. Se ejecuta sobre hardware limitado (Laptop RTX 3050 4GB) integrando una base de datos vectorial Qdrant, modelos ajustados mediante LoRA y un agente multi-herramienta sin APIs en la nube.
+                </p>
+                
+                <div class="tech-list-inline">
+                    <span class="tech-tag">RTX 3050 4GB</span>
+                    <span class="tech-tag">Ollama Local</span>
+                    <span class="tech-tag">Qwen 2.5 (3B)</span>
+                    <span class="tech-tag">Qdrant Vector DB</span>
+                    <span class="tech-tag">FastAPI Agent</span>
+                    <span class="tech-tag">Unsloth Fine-tuning</span>
+                    <span class="tech-tag">Docker Compose</span>
+                </div>
+
+                <div class="title-meta">
+                    <div class="meta-item">
+                        <span class="meta-label">Entorno</span>
+                        <span class="meta-value">MSI Katana GF66 · Windows 11</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Local LLM Inference</span>
+                        <span class="meta-value">Ollama Engine (Sin Nube)</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Fecha</span>
+                        <span class="meta-value">Junio 2025</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 2: ÍNDICE -->
+        <div class="slide" id="slide-2">
+            <h2 class="title-slide">ESTRUCTURA DEL PORTFOLIO <span class="slide-num">CONTENIDOS</span></h2>
+            <div class="full-width-content" style="display: flex; align-items: center; height: 100%;">
+                <div class="index-list">
+                    <div class="index-item" onclick="goToSlide(3)">
+                        <div class="index-num">01</div>
+                        <div class="index-text">Hardware y Arquitectura (RTX 3050, Ollama, Qdrant, Docker)</div>
+                    </div>
+                    <div class="index-item" onclick="goToSlide(5)">
+                        <div class="index-num">02</div>
+                        <div class="index-text">RAG Pipeline (Base de datos vectorial, Embeddings, +83% de mejora)</div>
+                    </div>
+                    <div class="index-item" onclick="goToSlide(7)">
+                        <div class="index-num">03</div>
+                        <div class="index-text">Fine-tuning (Ajuste fino LoRA mediante Unsloth, Evaluación A/B)</div>
+                    </div>
+                    <div class="index-item" onclick="goToSlide(9)">
+                        <div class="index-num">04</div>
+                        <div class="index-text">Tool Calling Agent (Paralelización de llamadas y Agent Loop)</div>
+                    </div>
+                    <div class="index-item" onclick="goToSlide(12)">
+                        <div class="index-num">05</div>
+                        <div class="index-text">Rendimiento y Capacidad (Pruebas de carga asíncronas y VRAM)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 3: SECCIÓN 1 - INTRO -->
+        <div class="slide" id="slide-3">
+            <div style="display: flex; flex-direction: column; justify-content: center; height: 100%;">
+                <div class="subtitle" style="font-size: 2rem;">MÓDULO 01</div>
+                <h1 class="title-large" style="font-size: 4.5rem; margin-bottom: 20px;">HARDWARE & ARQUITECTURA</h1>
+                <p class="description" style="max-width: 800px; font-size: 1.2rem;">
+                    Despliegue local completo mediante Docker Desktop. Orquestación de servicios locales optimizados para la memoria VRAM limitada de la GPU RTX 3050 (4GB) del portátil.
+                </p>
+                <div class="subtitle" style="color: var(--neon-purple);">STACK DE INFRAESTRUCTURA LOCAL - SIN DEPENDENCIAS EXTERNAS</div>
+            </div>
+        </div>
+
+        <!-- SLIDE 4: ARQUITECTURA DE SISTEMA -->
+        <div class="slide" id="slide-4">
+            <h2 class="title-slide">ARQUITECTURA DEL SISTEMA LOCAL <span class="slide-num">01.01</span></h2>
+            <div class="content-grid" style="grid-template-columns: 1.1fr 0.9fr;">
+                <div class="diagram-container">
+                    <svg viewBox="0 0 600 380" style="width:100%; height:100%;">
+                        <defs>
+                            <marker id="net-arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                                <path d="M 0 0 L 10 5 L 0 10 z" fill="#00EAFF" />
+                            </marker>
+                        </defs>
+
+                        <!-- Hardware context border -->
+                        <rect x="10" y="10" width="580" height="360" rx="15" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1.5" />
+                        <text x="25" y="30" fill="var(--text-muted)" font-family="Fira Code" font-size="10">MSI Katana (RTX 3050 4GB | 16GB RAM)</text>
+
+                        <!-- Docker Network boundary -->
+                        <rect x="25" y="45" width="550" height="310" rx="10" fill="rgba(15, 23, 42, 0.4)" stroke="var(--border-glow)" stroke-width="1.5" stroke-dasharray="6" />
+                        <text x="40" y="65" fill="var(--neon-blue)" font-family="Fira Code" font-size="11" font-weight="bold">DOCKER COMPOSE NETWORK</text>
+
+                        <!-- Node: Chat App (Port 8090) -->
+                        <g class="interactive-node" id="node-chatapp" onclick="showArchDetail('chatapp')">
+                            <rect x="45" y="150" width="140" height="70" rx="8" fill="rgba(9, 13, 22, 0.9)" stroke="var(--neon-blue)" stroke-width="1.5" />
+                            <text x="115" y="180" fill="#fff" font-family="Outfit" font-size="14" font-weight="bold" text-anchor="middle">Chat App UI</text>
+                            <text x="115" y="200" fill="var(--neon-blue)" font-family="Fira Code" font-size="10" text-anchor="middle">Port 8090</text>
+                        </g>
+
+                        <!-- Node: RAG API (Port 8000) -->
+                        <g class="interactive-node" id="node-ragapi" onclick="showArchDetail('ragapi')">
+                            <rect x="230" y="150" width="140" height="70" rx="8" fill="rgba(9, 13, 22, 0.9)" stroke="var(--neon-purple)" stroke-width="1.5" />
+                            <text x="300" y="180" fill="#fff" font-family="Outfit" font-size="14" font-weight="bold" text-anchor="middle">RAG API</text>
+                            <text x="300" y="200" fill="var(--neon-purple)" font-family="Fira Code" font-size="10" text-anchor="middle">Port 8000</text>
+                        </g>
+
+                        <!-- Node: Ollama (Port 11434) -->
+                        <g class="interactive-node" id="node-ollama" onclick="showArchDetail('ollama')">
+                            <rect x="415" y="90" width="140" height="70" rx="8" fill="rgba(9, 13, 22, 0.9)" stroke="var(--neon-green)" stroke-width="1.5" />
+                            <text x="485" y="120" fill="#fff" font-family="Outfit" font-size="14" font-weight="bold" text-anchor="middle">Ollama LLM</text>
+                            <text x="485" y="140" fill="var(--neon-green)" font-family="Fira Code" font-size="10" text-anchor="middle">Port 11434</text>
+                        </g>
+
+                        <!-- Node: Qdrant (Port 6333) -->
+                        <g class="interactive-node" id="node-qdrant" onclick="showArchDetail('qdrant')">
+                            <rect x="415" y="210" width="140" height="70" rx="8" fill="rgba(9, 13, 22, 0.9)" stroke="var(--neon-orange)" stroke-width="1.5" />
+                            <text x="485" y="240" fill="#fff" font-family="Outfit" font-size="14" font-weight="bold" text-anchor="middle">Qdrant DB</text>
+                            <text x="485" y="260" fill="var(--neon-orange)" font-family="Fira Code" font-size="10" text-anchor="middle">Port 6333</text>
+                        </g>
+
+                        <!-- Connections -->
+                        <path d="M 185 185 L 230 185" stroke="var(--neon-blue)" stroke-width="1.5" class="flow-line" marker-end="url(#net-arrow)" />
+                        <path d="M 370 165 L 415 130" stroke="var(--neon-purple)" stroke-width="1.5" class="flow-line" marker-end="url(#net-arrow)" />
+                        <path d="M 370 205 L 415 235" stroke="var(--neon-purple)" stroke-width="1.5" class="flow-line" marker-end="url(#net-arrow)" />
+                    </svg>
+                </div>
+                <div style="display:flex; flex-direction:column; justify-content:space-between;">
+                    <div>
+                        <h3 class="subtitle" style="margin-bottom:10px;">Especificación Técnica</h3>
+                        <p class="description" style="font-size:0.95rem;">
+                            Los servicios están encapsulados con Docker Compose para asegurar consistencia e independencia de puertos. El flujo de peticiones se realiza localmente en la red interna de Docker.
+                        </p>
+                        <p class="description" style="font-size:0.95rem; color:var(--neon-blue);">
+                            💡 <em>Haz clic en cada bloque del diagrama para ver la explicación técnica del servicio.</em>
+                        </p>
+                    </div>
+
+                    <div class="detail-panel" id="arch-detail">
+                        <h4 id="detail-title" style="color:var(--neon-blue); font-family:var(--font-mono); font-size:0.95rem; margin-bottom:5px;">Detalle del Servicio</h4>
+                        <p id="detail-desc" style="color:var(--text-muted); font-size:0.85rem; line-height:1.45;"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 5: SECCIÓN 2 - RAG PIPELINE -->
+        <div class="slide" id="slide-5">
+            <div style="display: flex; flex-direction: column; justify-content: center; height: 100%;">
+                <div class="subtitle" style="font-size: 2rem;">MÓDULO 02</div>
+                <h1 class="title-large" style="font-size: 4.5rem; margin-bottom: 20px;">RAG PIPELINE</h1>
+                <p class="description" style="max-width: 800px; font-size: 1.2rem;">
+                    Generación Aumentada por Recuperación (RAG) sobre documentación técnica de ingeniería de IA local. Indexación semántica, búsqueda vectorial de alta velocidad y evaluación rigurosa.
+                </p>
+                <div class="subtitle" style="color: var(--neon-purple);">OPTIMIZACIÓN DE BÚSQUEDA SEMÁNTICA CON MODELOS DE EMBEDDING LOCALES</div>
+            </div>
+        </div>
+
+        <!-- SLIDE 6: RAG PIPELINE RESULTS -->
+        <div class="slide" id="slide-6">
+            <h2 class="title-slide">RENDIMIENTO DEL RAG PIPELINE <span class="slide-num">02.01</span></h2>
+            <div class="full-width-content">
+                <div class="stat-grid-horizontal">
+                    <div class="stat-card-large">
+                        <div class="stat-value">62</div>
+                        <div class="stat-label">Documentos Indexados</div>
+                        <div class="stat-desc">Textos de ingeniería de IA</div>
+                    </div>
+                    <div class="stat-card-large">
+                        <div class="stat-value">384</div>
+                        <div class="stat-label">Dimensión Vectorial</div>
+                        <div class="stat-desc">all-MiniLM-L6-v2</div>
+                    </div>
+                    <div class="stat-card-large">
+                        <div class="stat-value" style="color:var(--neon-green)">+83%</div>
+                        <div class="stat-label">Relevancia de Respuestas</div>
+                        <div class="stat-desc">vs. Baseline sin RAG</div>
+                    </div>
+                    <div class="stat-card-large">
+                        <div class="stat-value">68 t/s</div>
+                        <div class="stat-label">Throughput de Inferencia</div>
+                        <div class="stat-desc">GPU RTX 3050 4GB</div>
+                    </div>
+                </div>
+
+                <div class="content-grid" style="grid-template-columns: 1fr 1fr; margin-top: 10px;">
+                    <div class="tech-card">
+                        <h3>📚 Tubería del Pipeline de Datos</h3>
+                        <p class="description" style="font-size: 0.9rem; line-height: 1.5;">
+                            1. Extracción de documentación local (Scraping y Parser Markdown).<br>
+                            2. Chunking dinámico con solapamiento (Overlap) de 50 tokens.<br>
+                            3. Generación de vectores densos con <code>sentence-transformers</code> local.<br>
+                            4. Almacenamiento e indexado en la base de datos Qdrant utilizando distancia coseno.<br>
+                            5. Búsqueda y recuperación de los top-3 chunks más afines semánticamente.<br>
+                            6. Inyección de contexto al prompt del modelo en Ollama.
+                        </p>
+                    </div>
+                    <div class="tech-card" style="border-color: var(--border-glow-purple);">
+                        <h3 class="purple-title">⚖️ Metodología de Evaluación Rigurosa</h3>
+                        <p class="description" style="font-size: 0.9rem; line-height: 1.5;">
+                            Para validar la efectividad de la recuperación se implementó un <strong>Golden Q&A Dataset</strong> con pares de pregunta-respuesta basados estrictamente en la documentación técnica. Un LLM de mayor escala actúa como juez evaluando de manera ciega la precisión en una escala del 1 al 5. El sistema RAG obtuvo un promedio de relevancia superior en un 83% comparado con el modelo base respondiendo únicamente por preentrenamiento.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 7: SECCIÓN 3 - FINE-TUNING -->
+        <div class="slide" id="slide-7">
+            <div style="display: flex; flex-direction: column; justify-content: center; height: 100%;">
+                <div class="subtitle" style="font-size: 2rem;">MÓDULO 03</div>
+                <h1 class="title-large" style="font-size: 4.5rem; margin-bottom: 20px;">FINE-TUNING (AJUSTE FINO)</h1>
+                <p class="description" style="max-width: 800px; font-size: 1.2rem;">
+                    Entrenamiento LoRA (Low-Rank Adaptation) acelerado mediante Unsloth. Ajuste del modelo sobre ejemplos de llamadas a herramientas locales para reducir tiempos de respuesta e iteraciones.
+                </p>
+                <div class="subtitle" style="color: var(--neon-purple);">EVALUACIÓN DE EFICIENCIA Y COMPORTAMIENTO COMPARATIVO</div>
+            </div>
+        </div>
+
+        <!-- SLIDE 8: FINE-TUNING RESULTS -->
+        <div class="slide" id="slide-8">
+            <h2 class="title-slide">EVALUACIÓN COMPARATIVA A/B <span class="slide-num">03.01</span></h2>
+            <div class="content-grid" style="grid-template-columns: 0.8fr 1.2fr;">
+                <div style="display:flex; flex-direction:column; gap:12px;">
+                    <div class="tech-card">
+                        <h3 style="font-size: 1.1rem;">📊 Métricas de Entrenamiento</h3>
+                        <p style="font-family: var(--font-mono); font-size: 0.85rem; margin-top:5px; color: var(--text-muted);">
+                            • Ejemplos: 230 train / 15 test<br>
+                            • Tiempo: 28 min (Local GPU)<br>
+                            • Framework: Unsloth (LoRA)<br>
+                            • Cuantización: GGUF Q4_K_M<br>
+                            • Peso Final: 1.9 GB
+                        </p>
+                    </div>
+                    <div class="tech-card" style="border-color: var(--border-glow-purple);">
+                        <h4 style="font-family: var(--font-mono); color: var(--neon-purple); font-size: 0.95rem; margin-bottom: 5px;">🔎 Conclusión Honesta</h4>
+                        <p class="description" style="font-size:0.82rem; line-height: 1.4;">
+                            El modelo base (Qwen 2.5:3B) ya poseía la capacidad de formatear llamadas JSON a herramientas. El ajuste fino no agregó lógica, pero optimizó la concisión y eficiencia: redujo la longitud de respuestas un 11% y disminuyó un 9% las iteraciones promedio de resolución de tareas.
+                        </p>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="subtitle" style="font-size:1.1rem; margin-bottom:10px;">A/B Evaluation - Base vs Fine-tuned</h3>
+                    <table class="neon-table">
+                        <thead>
+                            <tr>
+                                <th>Métrica</th>
+                                <th>Modelo Base (Qwen 2.5)</th>
+                                <th>Modelo Ajustado</th>
+                                <th>Impacto</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Tool Call Rate (Acierto)</td>
+                                <td style="color:var(--neon-green)">100% (5/5)</td>
+                                <td style="color:var(--neon-green)">100% (5/5)</td>
+                                <td>Sin regresión (Estable)</td>
+                            </tr>
+                            <tr>
+                                <td>Iteraciones medias por tarea</td>
+                                <td>2.2 iteraciones</td>
+                                <td style="color:var(--neon-green)">2.0 iteraciones</td>
+                                <td style="color:var(--neon-green)">-9.1% (Más rápido)</td>
+                            </tr>
+                            <tr>
+                                <td>Longitud de respuesta (Caract.)</td>
+                                <td>315 caracteres</td>
+                                <td style="color:var(--neon-green)">279 caracteres</td>
+                                <td style="color:var(--neon-green)">-11.4% (Más conciso)</td>
+                            </tr>
+                            <tr>
+                                <td>Precisión RAG (Relevancia)</td>
+                                <td>Línea Base</td>
+                                <td style="color:var(--neon-green)">+83% (vía RAG)</td>
+                                <td>Conserva capacidad RAG</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 9: SECCIÓN 4 - TOOL CALLING -->
+        <div class="slide" id="slide-9">
+            <div style="display: flex; flex-direction: column; justify-content: center; height: 100%;">
+                <div class="subtitle" style="font-size: 2rem;">MÓDULO 04</div>
+                <h1 class="title-large" style="font-size: 4.5rem; margin-bottom: 20px;">TOOL CALLING AGENT</h1>
+                <p class="description" style="max-width: 800px; font-size: 1.2rem;">
+                    Agente de IA reactivo e inteligente dotado de 6 herramientas locales con endpoints reales. Lógica de control autónoma basada en Native Ollama Tool Calling sin dependencias pesadas como LangChain.
+                </p>
+                <div class="subtitle" style="color: var(--neon-purple);">PARALELIZACIÓN DE LLAMADAS Y CICLO DE EJECUCIÓN AUTÓNOMO</div>
+            </div>
+        </div>
+
+        <!-- SLIDE 10: 6 TOOLS WITH BACKENDS -->
+        <div class="slide" id="slide-10">
+            <h2 class="title-slide">CATÁLOGO DE HERRAMIENTAS Y BUCLE DEL AGENTE <span class="slide-num">04.01</span></h2>
+            <div class="content-grid" style="grid-template-columns: 1.2fr 0.8fr;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="tech-card">
+                        <h3 style="font-size:0.95rem;">🔍 search_docs</h3>
+                        <span class="badge-mono">RAG API :8000</span>
+                        <p style="font-size: 0.8rem; margin-top:5px;">Búsqueda semántica de chunks en la base de datos de conocimiento.</p>
+                    </div>
+                    <div class="tech-card">
+                        <h3 style="font-size:0.95rem;">🤖 list_models</h3>
+                        <span class="badge-mono">Ollama :11434</span>
+                        <p style="font-size: 0.8rem; margin-top:5px;">Obtiene el catálogo de modelos LLM disponibles localmente.</p>
+                    </div>
+                    <div class="tech-card">
+                        <h3 style="font-size:0.95rem;">📟 get_gpu_stats</h3>
+                        <span class="badge-mono">nvidia-smi</span>
+                        <p style="font-size: 0.8rem; margin-top:5px;">Lectura directa de VRAM, carga gráfica y temperatura física de la GPU.</p>
+                    </div>
+                    <div class="tech-card">
+                        <h3 style="font-size:0.95rem;">📁 get_collection_info</h3>
+                        <span class="badge-mono">Qdrant :6333</span>
+                        <p style="font-size: 0.8rem; margin-top:5px;">Metadata y cantidad de vectores cargados en colecciones de Qdrant.</p>
+                    </div>
+                    <div class="tech-card">
+                        <h3 style="font-size:0.95rem;">📈 plot_metric</h3>
+                        <span class="badge-mono">matplotlib</span>
+                        <p style="font-size: 0.8rem; margin-top:5px;">Genera gráficos visuales PNG a partir de telemetría e históricos en CSV.</p>
+                    </div>
+                    <div class="tech-card">
+                        <h3 style="font-size:0.95rem;">📄 write_document</h3>
+                        <span class="badge-mono">ReportLab</span>
+                        <p style="font-size: 0.8rem; margin-top:5px;">Genera informes PDF estructurados y formateados de forma dinámica.</p>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="subtitle" style="font-size:1rem; margin-bottom:10px;">Bucle de Ejecución del Agente</h3>
+                    <p class="description" style="font-size: 0.85rem; line-height: 1.45;">
+                        El agente opera bajo una lógica de bucle continuo. El LLM decide autónomamente qué herramienta utilizar según la petición, formatea la llamada en JSON, el backend en Python ejecuta el código del sistema y devuelve los resultados en texto al LLM. El ciclo se repite hasta que el modelo determina que posee la información suficiente para dar la respuesta final al usuario.
+                    </p>
+                    <div class="tech-card" style="padding: 10px; font-family: var(--font-mono); font-size: 0.75rem; border-color: var(--border-glow-purple);">
+                        <strong>Agent Loop Flow:</strong><br>
+                        Usuario → LLM → Decidir Herramienta → Ejecutar Backend → Integrar Feedback → Generar Respuesta Final
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 11: MULTI-TOOL CHAINING -->
+        <div class="slide" id="slide-11">
+            <h2 class="title-slide">MULTITOOL CHAINING (ENCADENAMIENTO) <span class="slide-num">04.02</span></h2>
+            <div class="content-grid" style="grid-template-columns: 0.8fr 1.2fr;">
+                <div>
+                    <div class="tech-card" style="text-align: center; margin-bottom:15px;">
+                        <div class="stat-value" style="font-size: 4rem; color: var(--neon-green)">5 / 5</div>
+                        <div class="stat-label">Tareas E2E Completadas</div>
+                        <div class="stat-desc">Tasa de éxito del 100% en encadenamiento</div>
+                    </div>
+                    <p class="description" style="font-size:0.85rem; line-height: 1.45;">
+                        El modelo no requiere intervención del usuario para planificar y concatenar acciones. El motor realiza llamadas paralelas en la misma iteración para resolver peticiones complejas en un solo turno.
+                    </p>
+                </div>
+                <div>
+                    <table class="neon-table">
+                        <thead>
+                            <tr>
+                                <th>Escenario Complejo</th>
+                                <th>Herramientas Encadenadas</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Analizar GPU y Base Vectorial</td>
+                                <td><code>get_gpu_stats</code> + <code>get_collection_info</code></td>
+                                <td style="color:var(--neon-green)">ÉXITO (Pass)</td>
+                            </tr>
+                            <tr>
+                                <td>Buscar en Docs y Listar Modelos</td>
+                                <td><code>search_docs</code> + <code>list_models</code></td>
+                                <td style="color:var(--neon-green)">ÉXITO (Pass)</td>
+                            </tr>
+                            <tr>
+                                <td>Modelos Activos y Carga GPU</td>
+                                <td><code>list_models</code> + <code>get_gpu_stats</code></td>
+                                <td style="color:var(--neon-green)">ÉXITO (Pass)</td>
+                            </tr>
+                            <tr>
+                                <td>Escribir PDF con Datos de GPU</td>
+                                <td><code>write_document</code> + <code>get_gpu_stats</code></td>
+                                <td style="color:var(--neon-green)">ÉXITO (Pass)</td>
+                            </tr>
+                            <tr>
+                                <td>Cadena Triple (Qdrant + LLM + GPU)</td>
+                                <td><code>get_collection_info</code> + <code>list_models</code> + <code>get_gpu_stats</code></td>
+                                <td style="color:var(--neon-green)">ÉXITO (Pass)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 12: PERFORMANCE & CAPACITY -->
+        <div class="slide" id="slide-12">
+            <h2 class="title-slide">PRUEBAS DE CARGA Y RENDIMIENTO <span class="slide-num">05</span></h2>
+            <div class="full-width-content">
+                <div class="stat-grid-horizontal" style="margin-bottom: 20px;">
+                    <div class="stat-card-large">
+                        <div class="stat-value">12 / 12</div>
+                        <div class="stat-label">Peticiones Exitosas</div>
+                        <div class="stat-desc">100% de éxito en carga</div>
+                    </div>
+                    <div class="stat-card-large">
+                        <div class="stat-value">10.2 s</div>
+                        <div class="stat-label">Latencia p50 Servidor</div>
+                        <div class="stat-desc">Warmup inicial: 2 req.</div>
+                    </div>
+                    <div class="stat-card-large">
+                        <div class="stat-value" style="color:var(--neon-green)">0</div>
+                        <div class="stat-label">Errores de Sistema</div>
+                        <div class="stat-desc">Tasa de fallo del 0%</div>
+                    </div>
+                    <div class="stat-card-large">
+                        <div class="stat-value">1.00</div>
+                        <div class="stat-label">Calls / Request</div>
+                        <div class="stat-desc">Ratio medio de llamadas</div>
+                    </div>
+                </div>
+
+                <div class="content-grid" style="grid-template-columns: 1.2fr 0.8fr; margin-top: 10px;">
+                    <div>
+                        <h4 style="font-family:var(--font-mono); font-size: 0.95rem; color:var(--text-main); margin-bottom: 10px;">Distribución de Latencias del Servidor (Carga Concurrente)</h4>
+                        <div class="latency-chart">
+                            <div class="latency-row">
+                                <span class="latency-label">p50</span>
+                                <div class="latency-bar-bg">
+                                    <div class="latency-bar-fill" style="width: 12%; background: var(--neon-blue);"></div>
+                                    <span class="latency-value">10.2 s</span>
+                                </div>
+                            </div>
+                            <div class="latency-row">
+                                <span class="latency-label">p95</span>
+                                <div class="latency-bar-bg">
+                                    <div class="latency-bar-fill" style="width: 71%; background: var(--neon-orange);"></div>
+                                    <span class="latency-value">62.2 s</span>
+                                </div>
+                            </div>
+                            <div class="latency-row">
+                                <span class="latency-label">Max</span>
+                                <div class="latency-bar-bg">
+                                    <div class="latency-bar-fill" style="width: 100%; background: var(--neon-red);"></div>
+                                    <span class="latency-value">88.0 s</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tech-card" style="border-color: var(--border-glow-purple); display:flex; flex-direction:column; justify-content:center;">
+                        <h3 class="purple-title" style="font-size:1.05rem;">🔒 Estabilidad de VRAM de la GPU</h3>
+                        <p class="description" style="font-size:0.85rem; line-height: 1.45; margin-bottom: 0;">
+                            Durante el test de carga asíncrona, el consumo de VRAM de la GPU se mantuvo estable, oscilando de <strong>2354 MB a 2337 MB</strong> (una variación mínima de -17 MB sin fugas de memoria). Un caso extremo de consulta RAG compleja encadenó 5 llamadas a herramientas en una sola iteración sin causar desbordamientos de memoria.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 13: CAPACITY TEST -->
+        <div class="slide" id="slide-13">
+            <h2 class="title-slide">PRUEBA DE CAPACIDAD Y LÍMITES <span class="slide-num">05.01</span></h2>
+            <div class="content-grid" style="grid-template-columns: 1.3fr 0.7fr;">
+                <div>
+                    <h3 class="subtitle" style="font-size:1.1rem; margin-bottom:10px;">Escalabilidad Asíncrona: Usuarios Concurrentes</h3>
+                    <table class="neon-table">
+                        <thead>
+                            <tr>
+                                <th>Usuarios Concurrentes</th>
+                                <th>p50 Latencia (Paso)</th>
+                                <th>p95 Latencia (Cola)</th>
+                                <th>Throughput</th>
+                                <th>Tasa de Fallos</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1 usuario</td>
+                                <td>13.3 s</td>
+                                <td>19.2 s</td>
+                                <td>0.07 req/s</td>
+                                <td style="color:var(--neon-green)">0%</td>
+                            </tr>
+                            <tr>
+                                <td>2 usuarios</td>
+                                <td>29.0 s</td>
+                                <td>39.0 s</td>
+                                <td>0.06 req/s</td>
+                                <td style="color:var(--neon-green)">0%</td>
+                            </tr>
+                            <tr>
+                                <td>3 usuarios</td>
+                                <td>42.6 s</td>
+                                <td>45.3 s</td>
+                                <td>0.07 req/s</td>
+                                <td style="color:var(--neon-green)">0%</td>
+                            </tr>
+                            <tr style="background: rgba(239, 68, 68, 0.05);">
+                                <td>4 usuarios (Límite)</td>
+                                <td style="color:var(--neon-red)">74.3 s</td>
+                                <td style="color:var(--neon-red)">88.4 s</td>
+                                <td>0.05 req/s</td>
+                                <td style="color:var(--neon-green)">0%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div style="display:flex; flex-direction:column; justify-content:space-between;">
+                    <div class="tech-card">
+                        <h3>👥 Límite Operativo</h3>
+                        <p class="description" style="font-size: 0.85rem; line-height: 1.45; margin-bottom:0;">
+                            El sistema tolera hasta <strong>3 usuarios concurrentes</strong> manteniendo una latencia p50 inferior a los 45 s. Al escalar a 4 usuarios, las peticiones en cola causan que la latencia supere los 74 s debido a la naturaleza secuencial del hardware.
+                        </p>
+                    </div>
+                    <div class="tech-card" style="border-color: var(--border-glow-purple);">
+                        <h4 style="font-family:var(--font-mono); color:var(--neon-purple); font-size:0.95rem; margin-bottom:5px;">⚠️ Cuello de Botella</h4>
+                        <p class="description" style="font-size:0.85rem; line-height: 1.45; margin-bottom:0;">
+                            El cuello de botella absoluto del sistema es la velocidad de inferencia de la GPU RTX 3050. Al no utilizar APIs en la nube y realizar la computación en local, el hardware es el factor limitante, no la arquitectura del software.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 14: KEY TAKEAWAYS -->
+        <div class="slide" id="slide-14">
+            <h2 class="title-slide">CONCLUSIONES CLAVE <span class="slide-num">05.02</span></h2>
+            <div class="content-grid" style="grid-template-columns: 1fr 1fr;">
+                <div style="display:flex; flex-direction:column; gap:12px;">
+                    <div class="tech-card">
+                        <h3>🔒 Stack AI 100% Local y Privado</h3>
+                        <p class="description" style="font-size:0.85rem; margin-bottom:0;">
+                            Despliegue autónomo en portátil sin costes recurrentes de APIs ni envío de datos sensibles al exterior. Máxima privacidad operativa.
+                        </p>
+                    </div>
+                    <div class="tech-card">
+                        <h3>📊 Evaluación Rigurosa y Datos</h3>
+                        <p class="description" style="font-size:0.85rem; margin-bottom:0;">
+                            Decisiones técnicas respaldadas por datos reales: evaluación basada en dataset curado, LLM-as-Judge y pruebas de carga de concurrencia.
+                        </p>
+                    </div>
+                    <div class="tech-card">
+                        <h3>🤝 Honestidad en Resultados</h3>
+                        <p class="description" style="font-size:0.85rem; margin-bottom:0;">
+                            Documentado de manera transparente: el ajuste fino no aportó nuevas lógicas que el modelo base desconociera, pero optimizó los tokens de salida y el número de iteraciones.
+                        </p>
+                    </div>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:12px;">
+                    <div class="tech-card" style="border-color: var(--border-glow-purple);">
+                        <h3 class="purple-title">⚡ Capacidad de Encadenamiento Real</h3>
+                        <p class="description" style="font-size:0.85rem; margin-bottom:0;">
+                            El agente demuestra capacidad real al planificar y llamar herramientas simultáneamente en paralelo en un solo turno, sin necesidad de re-prompts o turnos extras.
+                        </p>
+                    </div>
+                    <div class="tech-card" style="border-color: var(--border-glow-purple); flex-grow:1; display:flex; flex-direction:column; justify-content:center;">
+                        <h3 class="purple-title">🌐 Enlaces de Demostración</h3>
+                        <p class="description" style="font-size:0.85rem; font-family: var(--font-mono); margin-bottom:0;">
+                            • Dashboard Local: <a href="http://localhost:8090" target="_blank" style="color:var(--neon-blue); text-decoration:none;">http://localhost:8090</a><br>
+                            • Computación de GPU: <code>nvidia-smi</code> local<br>
+                            • Código Fuente RAG: <code>phase-2-rag/</code>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Navigation Controls -->
+    <div class="controls-overlay">
+        <button class="control-btn" onclick="prevSlide()">◀</button>
+        <div class="slide-indicator"><span id="currentSlideNum">1</span> / <span id="totalSlidesNum">14</span></div>
+        <button class="control-btn" onclick="nextSlide()">▶</button>
+    </div>
+
+    <script>
+        // Slides Engine
+        let currentSlide = 1;
+        const totalSlides = 14;
+
+        document.getElementById('totalSlidesNum').innerText = totalSlides;
+
+        function updateProgress() {
+            const pct = ((currentSlide - 1) / (totalSlides - 1)) * 100;
+            document.getElementById('progressBar').style.width = `${pct}%`;
+            document.getElementById('currentSlideNum').innerText = currentSlide;
+        }
+
+        function showSlide(n) {
+            document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
+            
+            // Boundary checks
+            if (n > totalSlides) currentSlide = 1;
+            else if (n < 1) currentSlide = totalSlides;
+            else currentSlide = n;
+
+            document.getElementById(`slide-${currentSlide}`).classList.add('active');
+            updateProgress();
+        }
+
+        function nextSlide() {
+            showSlide(currentSlide + 1);
+        }
+
+        function prevSlide() {
+            showSlide(currentSlide - 1);
+        }
+
+        function goToSlide(n) {
+            showSlide(n);
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                prevSlide();
+            }
+        });
+
+        // Touch swipe detection
+        let touchstartX = 0;
+        let touchendX = 0;
+        
+        document.addEventListener('touchstart', e => {
+            touchstartX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', e => {
+            touchendX = e.changedTouches[0].screenX;
+            handleGesture();
+        });
+
+        function handleGesture() {
+            if (touchendX < touchstartX - 50) nextSlide();
+            if (touchendX > touchstartX + 50) prevSlide();
+        }
+
+        // Interactive Diagrams handlers
+        function showArchDetail(part) {
+            const panel = document.getElementById('arch-detail');
+            const title = document.getElementById('detail-title');
+            const desc = document.getElementById('detail-desc');
+            
+            // Remove active status from all nodes
+            document.querySelectorAll('.interactive-node').forEach(node => node.classList.remove('active-node'));
+
+            const details = {
+                chatapp: {
+                    title: "Chat App SPA (:8090)",
+                    desc: "La interfaz web reactiva (Single Page Application) servida localmente por FastAPI. Permite al usuario interactuar en modo de chat, visualizando renders Markdown de respuestas y gráficas PNG generadas por el agente de forma dinámica.",
+                    nodeId: "node-chatapp"
+                },
+                ragapi: {
+                    title: "RAG API & FastAPI Agent Server (:8000)",
+                    desc: "El servicio en Python que actúa como cerebro y orquestador. Recibe las consultas semánticas, realiza la recuperación (Retrieval) de documentos vectoriales en Qdrant, interroga al LLM local en Ollama y ejecuta las herramientas del sistema (generación de gráficos, reportes, etc.).",
+                    nodeId: "node-ragapi"
+                },
+                ollama: {
+                    title: "Ollama LLM Engine (:11434)",
+                    desc: "Servidor de modelos LLM local que aloja qwen2.5:3b y el modelo ajustado qwen2.5-rag-ft. Resuelve la inferencia en GPU RTX 3050 de forma secuencial, procesando los prompts enriquecidos con contexto vectorial y devolviendo JSON estructurados para llamadas a herramientas.",
+                    nodeId: "node-ollama"
+                },
+                qdrant: {
+                    title: "Qdrant Vector DB (:6333)",
+                    desc: "Base de datos vectorial ligera y de alta velocidad desplegada en Docker. Almacena 62 chunks de documentación técnica vectorizados a 384 dimensiones. Permite búsquedas vectoriales por similitud de coseno en menos de 5 ms.",
+                    nodeId: "node-qdrant"
+                }
+            };
+
+            const data = details[part];
+            if (data) {
+                title.innerText = data.title;
+                desc.innerText = data.desc;
+                panel.classList.add('visible');
+                document.getElementById(data.nodeId).classList.add('active-node');
+            }
+        }
+    </script>
+</body>
+</html>

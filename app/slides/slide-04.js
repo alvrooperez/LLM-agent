@@ -4,7 +4,7 @@ function createSlide(pres, theme) {
   slide.addShape(pres.shapes.RECTANGLE, { x: 0, y: 0, w: 10, h: 0.06, fill: { color: theme.accent } });
   slide.addText("System Architecture", {
     x: 0.5, y: 0.25, w: 9, h: 0.6,
-    fontSize: 28, bold: true, color: theme.primary, fontFace: "Arial"
+    fontSize: 28, bold: true, color: theme.primary, fontFace: "Segoe UI"
   });
 
   // LEFT: Hardware card
@@ -14,7 +14,7 @@ function createSlide(pres, theme) {
   });
   slide.addText("Hardware", {
     x: 0.7, y: 1.15, w: 3.8, h: 0.4,
-    fontSize: 13, bold: true, color: theme.accent, fontFace: "Arial"
+    fontSize: 13, bold: true, color: theme.accent, fontFace: "Segoe UI"
   });
   const hwRows = [
     ["Laptop", "MSI Katana GF66 11UC"],
@@ -24,8 +24,8 @@ function createSlide(pres, theme) {
     ["GPU CUDA", "12.8 / Driver 572.61"],
   ];
   hwRows.forEach(([k, v], i) => {
-    slide.addText(k, { x: 0.7, y: 1.6 + i * 0.52, w: 1.2, h: 0.4, fontSize: 11, bold: true, color: theme.secondary, fontFace: "Arial" });
-    slide.addText(v, { x: 1.9, y: 1.6 + i * 0.52, w: 2.6, h: 0.4, fontSize: 11, color: theme.primary, fontFace: "Arial" });
+    slide.addText(k, { x: 0.7, y: 1.6 + i * 0.52, w: 1.2, h: 0.4, fontSize: 11, bold: true, color: theme.secondary, fontFace: "Segoe UI" });
+    slide.addText(v, { x: 1.9, y: 1.6 + i * 0.52, w: 2.6, h: 0.4, fontSize: 11, color: theme.primary, fontFace: "Segoe UI" });
   });
 
   // RIGHT: Components grid
@@ -44,17 +44,17 @@ function createSlide(pres, theme) {
       x: x, y: y, w: 2.2, h: 1.85,
       fill: { color: theme.light }, rectRadius: 0.08
     });
-    slide.addText(c.name, { x: x + 0.15, y: y + 0.12, w: 1.9, h: 0.35, fontSize: 14, bold: true, color: theme.primary, fontFace: "Arial" });
+    slide.addText(c.name, { x: x + 0.15, y: y + 0.12, w: 1.9, h: 0.35, fontSize: 14, bold: true, color: theme.primary, fontFace: "Segoe UI" });
     slide.addShape(pres.shapes.RECTANGLE, { x: x + 0.15, y: y + 0.5, w: 1.9, h: 0.03, fill: { color: c.color } });
-    slide.addText(c.port, { x: x + 0.15, y: y + 0.65, w: 1.9, h: 0.35, fontSize: 18, bold: true, color: c.color, fontFace: "Arial" });
-    slide.addText(c.note, { x: x + 0.15, y: y + 1.1, w: 1.9, h: 0.6, fontSize: 10, color: theme.secondary, fontFace: "Arial" });
+    slide.addText(c.port, { x: x + 0.15, y: y + 0.65, w: 1.9, h: 0.35, fontSize: 18, bold: true, color: c.color, fontFace: "Segoe UI" });
+    slide.addText(c.note, { x: x + 0.15, y: y + 1.1, w: 1.9, h: 0.6, fontSize: 10, color: theme.secondary, fontFace: "Segoe UI" });
   });
 
   // Bottom bar
   slide.addShape(pres.shapes.RECTANGLE, { x: 0.5, y: 5.1, w: 9, h: 0.02, fill: { color: theme.light } });
   slide.addText("All services containerized with Docker  |  No cloud APIs  |  Full local inference", {
-    x: 0.5, y: 5.15, w: 9, h: 0.3, fontSize: 10, color: theme.secondary, fontFace: "Arial"
+    x: 0.5, y: 5.15, w: 9, h: 0.3, fontSize: 10, color: theme.secondary, fontFace: "Segoe UI"
   });
-  slide.addText("04", { x: 9.3, y: 5.1, w: 0.5, h: 0.35, fontSize: 10, color: theme.secondary, fontFace: "Arial" });
+  slide.addText("04", { x: 9.3, y: 5.1, w: 0.5, h: 0.35, fontSize: 10, color: theme.secondary, fontFace: "Segoe UI" });
 }
 module.exports = { createSlide };

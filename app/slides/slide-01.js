@@ -14,23 +14,23 @@ function createSlide(pres, theme) {
   slide.addText("AI Engineering Portfolio", {
     x: 0.6, y: 1.5, w: 8.8, h: 1.4,
     fontSize: 54, bold: true, color: theme.primary,
-    fontFace: "Arial", fit: "shrink"
+    fontFace: "Segoe UI", fit: "shrink"
   });
   // Subtitle
   slide.addText("Local LLM with RAG, Fine-tuning & Tool Calling", {
     x: 0.6, y: 3.0, w: 8.8, h: 0.6,
-    fontSize: 22, color: theme.secondary, fontFace: "Arial"
+    fontSize: 22, color: theme.secondary, fontFace: "Segoe UI"
   });
   // Divider line
   slide.addShape(pres.shapes.RECTANGLE, { x: 0.6, y: 3.7, w: 3.0, h: 0.04, fill: { color: theme.accent } });
   // Meta
   slide.addText("RTX 3050 4GB  |  MSI Katana GF66  |  Windows 11", {
     x: 0.6, y: 4.0, w: 8, h: 0.4,
-    fontSize: 13, color: theme.secondary, fontFace: "Arial"
+    fontSize: 13, color: theme.secondary, fontFace: "Segoe UI"
   });
   slide.addText("June 2025", {
     x: 0.6, y: 4.5, w: 8, h: 0.3,
-    fontSize: 12, color: theme.secondary, fontFace: "Arial"
+    fontSize: 12, color: theme.secondary, fontFace: "Segoe UI"
   });
   // Gold badge top right
   slide.addShape(pres.shapes.RECTANGLE, {
@@ -40,7 +40,7 @@ function createSlide(pres, theme) {
   slide.addText("NO CLOUD", {
     x: 8.0, y: 0.4, w: 1.7, h: 0.5,
     fontSize: 11, bold: true, color: theme.bg, align: "center", valign: "middle",
-    fontFace: "Arial"
+    fontFace: "Segoe UI"
   });
 }
 module.exports = { createSlide };
