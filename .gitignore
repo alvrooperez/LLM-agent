@@ -61,6 +61,10 @@ models/
 # PPTX output (kept in repo for demo; regenerate with `node slides/compile.js`)
 # **/slides/output/
 
+# Demo GIF (regenerate with `python make_demo_gif.py`)
+docs/demo.gif
+docs/screenshots/
+
 # Local data
 **/data/finetune/gguf/
 **/data/finetune/full_model*/
