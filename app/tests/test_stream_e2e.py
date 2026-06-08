@@ -1,58 +1,55 @@
-import urllib.request, json, time
+"""
+Test E2E del endpoint /api/chat/stream con Ollama real.
+Solo se ejecuta si el server esta vivo.
+"""
+import socket
+import json
+import time
+import urllib.request
+import urllib.error
+import pytest
 
-# Mensaje simple sin tools para ver streaming puro
-data = json.dumps({
-    'message': 'Saluda en 3 lineas distintas',
-    'model': 'qwen2.5-rag-ft',
-}).encode()
-req = urllib.request.Request(
-    'http://localhost:8090/api/chat/stream',
-    data=data,
-    headers={'Content-Type': 'application/json', 'User-Agent': 'stream-test/1.0'},
-    method='POST',
-)
+HOST = "localhost"
+PORT = 8090
 
-t0 = time.time()
-tokens = []
-tool_calls_seen = []
-with urllib.request.urlopen(req, timeout=120) as r:
-    print(f"Status: {r.status}, Content-Type: {r.headers.get('Content-Type')}")
-    buf = b''
-    last_token_time = t0
-    while True:
-        chunk = r.read(1)
-        if not chunk:
-            break
-        buf += chunk
-        # Procesar cuando tengamos \n\n
-        if buf.endswith(b'\n\n'):
-            block = buf.decode('utf-8', errors='replace')
-            buf = b''
-            # Parsear SSE
-            event = None
-            data_str = ''
-            for line in block.strip().split('\n'):
-                if line.startswith('event: '):
-                    event = line[7:].strip()
-                elif line.startswith('data: '):
-                    data_str = line[6:]
-            if event == 'token' and data_str:
-                payload = json.loads(data_str)
-                tokens.append(payload['text'])
-                if len(tokens) == 1 or len(tokens) % 5 == 0:
-                    elapsed = time.time() - t0
-                    print(f"  [{len(tokens):3d} tokens, {elapsed:.1f}s] last: {payload['text']!r}")
-            elif event == 'tool_call':
-                payload = json.loads(data_str)
-                tool_calls_seen.append(payload['name'])
-            elif event == 'done':
-                payload = json.loads(data_str)
-                print(f"\nDone: {payload['iterations']} iter, {payload['elapsed_sec']}s server")
-            elif event == 'error':
-                payload = json.loads(data_str)
-                print(f"\nERROR: {payload}")
+pytestmark = pytest.mark.e2e
 
-total = time.time() - t0
-print(f"\nTotal: {len(tokens)} tokens, {total:.1f}s")
-print(f"Tool calls: {tool_calls_seen}")
-print(f"Full response: {''.join(tokens)}")
+
+def server_alive() -> bool:
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(2)
+        s.connect((HOST, PORT))
+        s.close()
+        return True
+    except Exception:
+        return False
+
+
+@pytest.mark.skipif(not server_alive(), reason="chat server not running on :8090")
+def test_stream_endpoint_emits_tokens():
+    """El endpoint /api/chat/stream emite eventos SSE de Ollama."""
+    data = json.dumps({
+        "message": "ok",
+        "model": "qwen2.5-rag-ft",
+    }).encode()
+    req = urllib.request.Request(
+        f"http://{HOST}:{PORT}/api/chat/stream",
+        data=data,
+        headers={"Content-Type": "application/json", "User-Agent": "stream-test/1.0"},
+        method="POST",
+    )
+    with urllib.request.urlopen(req, timeout=180) as r:
+        assert r.status == 200
+        assert r.headers.get("Content-Type", "").startswith("text/event-stream")
+        # Leer chunks hasta cierre
+        body = b""
+        while True:
+            chunk = r.read(4096)
+            if not chunk:
+                break
+            body += chunk
+    text = body.decode("utf-8", errors="replace")
+
+    # Debe tener al menos un evento
+    assert "event:" in text, f"No SSE events in response: {text[:200]}"

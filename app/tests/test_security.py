@@ -1,7 +1,32 @@
-"""Test end-to-end de seguridad + agente."""
-import urllib.request, urllib.error, json, time
+"""
+Test end-to-end de seguridad + agente.
+
+Requiere el server corriendo en :8090. Si no, skip todos.
+"""
+import socket
+import urllib.request
+import urllib.error
+import json
+import time
+import pytest
 
 BASE = "http://localhost:8090"
+HOST = "localhost"
+PORT = 8090
+
+pytestmark = [pytest.mark.e2e]
+
+
+def server_alive() -> bool:
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(2)
+        s.connect((HOST, PORT))
+        s.close()
+        return True
+    except Exception:
+        return False
+
 
 def call(path, headers=None, method="GET", data=None, timeout=10):
     h = {"User-Agent": "sec-test/1.0"}
@@ -15,38 +40,37 @@ def call(path, headers=None, method="GET", data=None, timeout=10):
         return e.code, e.read().decode("utf-8", errors="replace")[:300]
 
 
-# T1
-print("[T1] Health sin auth")
-s, b = call("/api/health")
-print(f"  {s}: {b[:80]}")
+@pytest.mark.skipif(not server_alive(), reason="chat server not running on :8090")
+class TestSecurityE2E:
+    def test_health_sin_auth(self):
+        s, b = call("/api/health")
+        assert s == 200
 
-# T2
-print("[T2] Models sin auth (modo open)")
-s, b = call("/api/models")
-print(f"  {s}: {b[:80]}")
+    def test_models_sin_auth_modo_open(self):
+        s, b = call("/api/models")
+        assert s == 200
 
-# T3
-print("[T3] Scanner (sqlmap)")
-s, b = call("/api/models", headers={"User-Agent": "sqlmap/1.5"})
-print(f"  {s}: {b[:80]}  (esperado 403)")
+    def test_scanner_sqlmap(self):
+        s, b = call("/api/models", headers={"User-Agent": "sqlmap/1.5"})
+        assert s == 403
 
-# T4
-print("[T4] Path traversal")
-s, b = call("/api/docs/..%2Fpasswd")
-print(f"  {s}: {b[:80]}  (esperado 400)")
+    def test_path_traversal(self):
+        s, b = call("/api/docs/..%2Fpasswd")
+        assert s in (400, 404)
 
-# T5
-print("[T5] Chat con mensaje simple (modo open)")
-body = json.dumps({"message": "Hola, dame el estado de la GPU", "model": "qwen2.5-rag-ft"}).encode()
-t0 = time.time()
-s, b = call("/api/chat", method="POST", data=body, headers={"Content-Type": "application/json"}, timeout=120)
-elapsed = time.time() - t0
-print(f"  {s} in {elapsed:.1f}s: {b[:150]}")
+    def test_chat_rejects_oversized(self):
+        huge = "x" * 5000
+        s, b = call("/api/chat", method="POST", data=json.dumps({"message": huge}).encode(),
+                     headers={"Content-Type": "application/json"})
+        assert s == 422
 
-# T6
-print("[T6] Chat mensaje gigante (debe rechazar)")
-body = json.dumps({"message": "x" * 3000, "model": "qwen2.5-rag-ft"}).encode()
-s, b = call("/api/chat", method="POST", data=body, headers={"Content-Type": "application/json"})
-print(f"  {s}: {b[:80]}  (esperado 422)")
-
-print("\nDone")
+    def test_chat_basic_works(self):
+        """Sanity: el agente responde un mensaje simple."""
+        s, b = call(
+            "/api/chat",
+            method="POST",
+            data=json.dumps({"message": "Dime hola en una palabra", "model": "qwen2.5-rag-ft"}).encode(),
+            headers={"Content-Type": "application/json"},
+            timeout=120,
+        )
+        assert s == 200

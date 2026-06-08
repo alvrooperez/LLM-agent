@@ -1,19 +1,32 @@
 """
 Test E2E del endpoint /api/chat/compare con Ollama real.
-Solo se ejecuta si Ollama esta vivo, sino skip.
+Solo se ejecuta si server + Ollama estan vivos.
 """
 import sys
+import socket
 import json
 import time
 import urllib.request
 import urllib.error
 from pathlib import Path
+import pytest
 
 SCRIPTS_DIR = Path(__file__).parent.parent / "scripts"
 sys.path.insert(0, str(SCRIPTS_DIR))
 
 
-def ollama_alive():
+def server_alive() -> bool:
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(2)
+        s.connect(("localhost", 8090))
+        s.close()
+        return True
+    except Exception:
+        return False
+
+
+def ollama_alive() -> bool:
     try:
         with urllib.request.urlopen("http://localhost:11434/api/tags", timeout=2) as r:
             return r.status == 200
@@ -21,12 +34,14 @@ def ollama_alive():
         return False
 
 
+pytestmark = pytest.mark.skipif(
+    not (server_alive() and ollama_alive()),
+    reason="server on :8090 or Ollama not available",
+)
+
+
 def test_compare_e2e_returns_events_from_both_models():
     """El endpoint emite eventos tagged por modelo."""
-    if not ollama_alive():
-        pytest.skip("Ollama not available")
-
-    import pytest
     data = json.dumps({
         "message": "ok",
         "models": ["qwen2.5:3b", "qwen2.5-rag-ft"],
