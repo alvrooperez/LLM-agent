@@ -33,7 +33,8 @@ services:
     ports:
       - "11434:11434"
     volumes:
-      - ollama-data:/root/.ollama
+      # Bind mount: reusa el caché de modelos del host (qwen2.5:3b ya descargado)
+      - ${USERPROFILE}/.ollama:/root/.ollama
     deploy:
       resources:
         reservations:

@@ -1,32 +1,36 @@
 const pptxgen = require('pptxgenjs');
 const pres = new pptxgen();
-pres.layout = 'LAYOUT_16x9';
+pres.layout = 'LAYOUT_16x9'; // 10 x 5.625 inches (16:9 standard)
+pres.title = 'AI Engineering Portfolio';
+pres.author = 'Alvaro';
 
-// Modern Tech & Cyberpunk palette (Space Dark + Neon Cyan + Clean Slate)
+// Light editorial palette — Stripe / Linear / Vercel docs inspired
 const theme = {
-  primary:   'F8FAFC',   // Clean Off-white - main text
-  secondary: '94A3B8',   // Slate Gray - secondary text
-  accent:    '00EAFF',   // Neon Cyan - accents and highlights
-  accent2:   'BD00FF',   // Neon Purple - accents
-  light:     '0F172A',   // Slate Blue - card/panel background
-  bg:        '020617',   // Deepest Space Blue - slide background
+  bg:        'FFFFFF',  // pure white
+  surface:   'F8FAFC',  // very light gray
+  border:    'E2E8F0',  // soft border
+  text:      '0A2540',  // deep navy — primary text
+  textSoft:  '64748B',  // slate — secondary text
+  accent:    '0066FF',  // electric blue
+  accentSoft:'EFF6FF',  // very light blue
+  success:   '10B981',  // emerald
+  warning:   'F59E0B',  // amber
+  divider:   'CBD5E1',  // mid gray
 };
 
 const slides = [
-  require('./slide-01.js'),
-  require('./slide-02.js'),
-  require('./slide-03.js'),
-  require('./slide-04.js'),
-  require('./slide-05.js'),
-  require('./slide-06.js'),
-  require('./slide-07.js'),
-  require('./slide-08.js'),
-  require('./slide-09.js'),
-  require('./slide-10.js'),
-  require('./slide-11.js'),
-  require('./slide-12.js'),
-  require('./slide-13.js'),
-  require('./slide-14.js'),
+  require('./slide-01-cover.js'),
+  require('./slide-02-toc.js'),
+  require('./slide-03-hero.js'),
+  require('./slide-04-architecture.js'),
+  require('./slide-05-rag.js'),
+  require('./slide-06-rag-results.js'),
+  require('./slide-07-finetuning.js'),
+  require('./slide-08-finetuning-results.js'),
+  require('./slide-09-agent.js'),
+  require('./slide-10-performance.js'),
+  require('./slide-11-auth.js'),
+  require('./slide-12-closing.js'),
 ];
 
 for (const mod of slides) {

@@ -8,15 +8,16 @@ Cubre:
   - /api/chat maneja Ollama caido sin crashear
   - /api/docs sanitiza nombres maliciosos
   - /api/models responde (con Ollama mockeado)
+  - Auth: JWT (login + endpoint protection)
 
 NO ejecuta el agent loop completo (eso requiere Ollama real y tarda).
 """
 import sys
 import time
 import pytest
+import json
 from pathlib import Path
 from unittest.mock import patch, MagicMock
-import json
 
 SCRIPTS_DIR = Path(__file__).parent.parent / "scripts"
 sys.path.insert(0, str(SCRIPTS_DIR))
@@ -25,12 +26,42 @@ from fastapi.testclient import TestClient
 import chat_app
 
 
+@pytest.fixture(autouse=True)
+def reset_rate_limit():
+    """Reset rate limit storage antes de CADA test (autouse=True).
+    Sin esto, los tests de login se pisan entre si porque slowapi comparte
+    el storage en memoria del proceso. Usar el metodo .reset() de slowapi."""
+    try:
+        chat_app.app.state.limiter.reset()
+    except Exception:
+        chat_app.app.state.limiter._storage = None
+    yield
+    try:
+        chat_app.app.state.limiter.reset()
+    except Exception:
+        pass
+
+
 @pytest.fixture
 def client():
-    """TestClient con rate limit deshabilitado (storage en memoria)."""
-    # Reset rate limiter storage para que tests no se pisen entre si
-    chat_app.app.state.limiter._storage = None
+    """TestClient con User-Agent pytest."""
     return TestClient(chat_app.app, headers={"User-Agent": "pytest/1.0"})
+
+
+@pytest.fixture
+def auth_client(client):
+    """TestClient con un JWT válido en el header Authorization."""
+    r = client.post("/api/auth/login", json={"username": "admin", "password": "admin123"})
+    if r.status_code != 200:
+        from auth import ensure_users_file
+        ensure_users_file()
+        # Reset storage otra vez tras ensure_users_file
+        chat_app.app.state.limiter._storage = None
+        r = client.post("/api/auth/login", json={"username": "admin", "password": "admin123"})
+    assert r.status_code == 200, f"login failed: {r.status_code} {r.text}"
+    token = r.json()["token"]
+    client.headers["Authorization"] = f"Bearer {token}"
+    return client
 
 
 def test_health_endpoint(client):
@@ -44,7 +75,6 @@ def test_health_endpoint(client):
 
 def test_health_reports_degraded_when_component_down(client, monkeypatch):
     """Si algun componente esta down, status='degraded' (no 'ok')."""
-    # Mockear _check_service_ok para que uno falle
     import chat_app
     def fake_check(url, timeout=2.0):
         return False  # todo caido
@@ -53,41 +83,25 @@ def test_health_reports_degraded_when_component_down(client, monkeypatch):
     r = client.get("/api/health")
     assert r.status_code == 200
     d = r.json()
-    # Con todo down, status debe ser "degraded"
     assert d["status"] == "degraded"
     assert d["components"]["ollama"] == "down"
     assert d["components"]["qdrant"] == "down"
 
 
 def test_health_does_not_hang_on_slow_service(client, monkeypatch):
-    """NOTA: este test se omite porque time.sleep() en el thread mockeado
-    no se puede interrumpir desde asyncio.wait_for (Python no mata threads).
-    El comportamiento correcto se valida en producción con: Ollama colgado
-    -> endpoint devuelve 'down' en ~2.5s sin esperar al thread.
-    Ver tests/test_chat_app.py::test_health_reports_degraded_when_component_down
-    para la verificacion del path 'degraded'."""
+    """El health check debe responder rapido aunque un servicio este caido.
+    El comportamiento real con time.sleep (no interrumpible) se valida en
+    produccion, no en unit tests (Python no mata threads)."""
     import chat_app
-
-    def slow_check(url, timeout=2.0):
-        # En vez de time.sleep (no interrumpible), devolvemos False rapido
-        # simulando un servicio caido (que es lo que el timeout haria
-        # en produccion: tras 2s, la llamada a urlopen lanza excepcion)
-        return False
-
-    def fast_check(url, timeout=2.0):
-        return True
-
     def selective_check(url, timeout=2.0):
         if "11434" in url:
-            return slow_check(url, timeout)
-        return fast_check(url, timeout)
+            return False  # simula Ollama caido
+        return True
     monkeypatch.setattr(chat_app, "_check_service_ok", selective_check)
 
     t0 = time.time()
     r = client.get("/api/health")
     elapsed = time.time() - t0
-
-    # Responde rapido porque slow_check devuelve False inmediato
     assert elapsed < 1.0, f"Health tardo {elapsed:.2f}s — deberia ser < 1s"
     assert r.status_code == 200
     d = r.json()
@@ -95,100 +109,130 @@ def test_health_does_not_hang_on_slow_service(client, monkeypatch):
     assert d["components"]["qdrant"] == "ok"
 
 
-def test_models_endpoint(client):
-    """/api/models responde (puede fallar si Ollama no esta, pero 200 o 503)."""
+# ── Auth: tests con JWT (todos los endpoints requieren login) ────────────
+
+def test_models_requires_auth(client):
+    """/api/models sin Authorization devuelve 401."""
     r = client.get("/api/models")
+    assert r.status_code == 401
+
+
+def test_models_endpoint(auth_client):
+    """/api/models con JWT responde (200 si Ollama up, 503 si no)."""
+    r = auth_client.get("/api/models")
     assert r.status_code in (200, 503)
 
 
-def test_chat_rejects_oversized_message(client):
+def test_chat_rejects_oversized_message(auth_client):
     """Mensaje > 2000 chars se rechaza con 422 (Pydantic validation)."""
     huge = "x" * 3000
-    r = client.post("/api/chat", json={"message": huge, "model": "qwen2.5:3b"})
+    r = auth_client.post("/api/chat", json={"message": huge, "model": "qwen2.5:3b"})
     assert r.status_code == 422
 
 
-def test_chat_rejects_empty_message(client):
+def test_chat_rejects_empty_message(auth_client):
     """Mensaje vacio se rechaza (min_length=1 en Pydantic)."""
-    r = client.post("/api/chat", json={"message": "", "model": "qwen2.5:3b"})
+    r = auth_client.post("/api/chat", json={"message": "", "model": "qwen2.5:3b"})
     assert r.status_code == 422
 
 
-def test_chat_rejects_oversized_model_name(client):
+def test_chat_rejects_oversized_model_name(auth_client):
     """Model name > 100 chars se rechaza."""
-    r = client.post("/api/chat", json={"message": "hola", "model": "x" * 200})
+    r = auth_client.post("/api/chat", json={"message": "hola", "model": "x" * 200})
     assert r.status_code == 422
 
 
 def test_chat_blocks_sqlmap_ua(client):
-    """UA de scanner devuelve 403."""
-    r = client.get("/api/models", headers={"User-Agent": "sqlmap/1.5"})
+    """UA de scanner devuelve 403 (incluso en endpoints publicos como /api/auth/login)."""
+    r = client.post("/api/auth/login", json={"username": "admin", "password": "x"},
+                    headers={"User-Agent": "sqlmap/1.5"})
     assert r.status_code == 403
 
 
-def test_chat_allows_empty_ua(client):
-    """UA vacio se loguea pero NO se bloquea (clientes legitimos como curl)."""
-    r = client.get("/api/models", headers={"User-Agent": ""})
-    # No debe ser 403; puede ser 200 o 503 (si Ollama no responde)
+def test_chat_allows_empty_ua(auth_client):
+    """UA vacio se loguea pero NO se bloquea."""
+    r = auth_client.get("/api/models", headers={"User-Agent": ""})
     assert r.status_code != 403
 
 
-def test_chat_allows_normal_ua(client):
+def test_chat_allows_normal_ua(auth_client):
     """UA normal no se bloquea."""
-    r = client.get("/api/models", headers={"User-Agent": "Mozilla/5.0"})
+    r = auth_client.get("/api/models", headers={"User-Agent": "Mozilla/5.0"})
     assert r.status_code != 403
 
 
-def test_docs_sanitizes_path_traversal(client):
+def test_docs_sanitizes_path_traversal(auth_client):
     """/api/docs/<filename> rechaza traversal."""
-    # FastAPI ya bloquea '..' en routing, asi que probamos caracteres especiales
-    r = client.get("/api/docs/..%2F..%2Fpasswd")
-    # 404 (FastAPI no lo routea) o 400 (nuestra validacion)
+    r = auth_client.get("/api/docs/..%2F..%2Fpasswd")
     assert r.status_code in (400, 404)
 
 
-def test_docs_sanitizes_non_pdf(client):
+def test_docs_sanitizes_non_pdf(auth_client):
     """/api/docs/<archivo que no es pdf> devuelve 400."""
-    r = client.get("/api/docs/../etc/passwd")
+    r = auth_client.get("/api/docs/../etc/passwd")
     assert r.status_code in (400, 404)
 
 
-def test_docs_list_returns_list(client):
+def test_docs_list_returns_list(auth_client):
     """/api/docs devuelve lista (puede ser vacia)."""
-    r = client.get("/api/docs")
+    r = auth_client.get("/api/docs")
     assert r.status_code == 200
     d = r.json()
     assert "docs" in d
     assert isinstance(d["docs"], list)
 
 
-# ── Auth: solo se activa si CHAT_API_KEY esta configurada ───────────────
+# ── Auth endpoints ──────────────────────────────────────────────────────
 
-def test_auth_disabled_by_default(client, monkeypatch):
-    """Sin CHAT_API_KEY en env, no se requiere auth."""
-    monkeypatch.setattr(chat_app, "CHAT_API_KEY", "")
-    # En modo open, /api/models responde (no 401)
-    r = client.get("/api/models")
-    assert r.status_code != 401
-
-
-def test_auth_enabled_rejects_no_key(client, monkeypatch):
-    """Con CHAT_API_KEY, /api/models sin X-API-Key devuelve 401."""
-    monkeypatch.setattr(chat_app, "CHAT_API_KEY", "secret-test-key-123")
-    # TestClient re-evalua dependencias en cada request
-    r = client.get("/api/models")
+def test_login_rejects_wrong_password(client):
+    """Login con password incorrecta devuelve 401."""
+    r = client.post("/api/auth/login", json={"username": "admin", "password": "wrong"})
     assert r.status_code == 401
 
 
-def test_auth_enabled_rejects_wrong_key(client, monkeypatch):
-    """Con CHAT_API_KEY, X-API-Key incorrecta devuelve 401."""
-    monkeypatch.setattr(chat_app, "CHAT_API_KEY", "secret-test-key-123")
-    r = client.get("/api/models", headers={"X-API-Key": "wrong-key"})
+def test_login_rejects_missing_user(client):
+    """Login con user inexistente devuelve 401 (no 404, no泄露 que el user existe)."""
+    r = client.post("/api/auth/login", json={"username": "noexiste123", "password": "x"})
     assert r.status_code == 401
 
 
-def test_auth_enabled_accepts_correct_key(client, monkeypatch):
-    """Con CHAT_API_KEY, X-API-Key correcta pasa auth (puede fallar downstream)."""
-    monkeypatch.setattr(chat_app, "CHAT_API_KEY", "secret-test-key-123")
-    r = client.get("/api/models", headers={"X-API-Key": "secret-test-key-123"})
-    assert r.status_code != 401
+def test_login_accepts_correct_credentials(client):
+    """Login correcto devuelve 200 + token + user."""
+    r = client.post("/api/auth/login", json={"username": "admin", "password": "admin123"})
+    assert r.status_code == 200
+    d = r.json()
+    assert "token" in d and len(d["token"]) > 50
+    assert d["user"]["username"] == "admin"
+    assert d["user"]["role"] == "admin"
+
+
+def test_me_requires_token(client):
+    """/api/auth/me sin Authorization devuelve 401."""
+    r = client.get("/api/auth/me")
+    assert r.status_code == 401
+
+
+def test_me_rejects_invalid_token(client):
+    """/api/auth/me con token malformado devuelve 401."""
+    r = client.get("/api/auth/me", headers={"Authorization": "Bearer not.a.jwt"})
+    assert r.status_code == 401
+
+
+def test_me_rejects_tampered_token(client):
+    """/api/auth/me con JWT con firma incorrecta devuelve 401."""
+    # JWT con payload válido pero firma fake — el servidor detecta firma mala
+    bad_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiJ9.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    r = client.get("/api/auth/me", headers={"Authorization": f"Bearer {bad_token}"})
+    assert r.status_code == 401
+
+
+def test_me_accepts_valid_token(client):
+    """Login + /api/auth/me devuelve info del usuario."""
+    r = client.post("/api/auth/login", json={"username": "admin", "password": "admin123"})
+    token = r.json()["token"]
+    r2 = client.get("/api/auth/me", headers={"Authorization": f"Bearer {token}"})
+    assert r2.status_code == 200
+    d = r2.json()
+    assert d["username"] == "admin"
+    assert d["role"] == "admin"
+    assert d["is_admin"] is True

@@ -1,7 +1,9 @@
 """
 Web chat que reutiliza el agent loop (scripts/agent/run.py).
 
-Backend FastAPI con seguridad y rate limiting:
+Backend FastAPI con seguridad, rate limiting y autenticación:
+  POST /api/auth/login    → username/password → JWT
+  POST /api/auth/logout   → (client-side: borrar token)
   GET  /                  → index.html
   GET  /architecture      → architecture.html
   POST /api/chat          → ejecuta el agent loop (no streaming)
@@ -12,7 +14,8 @@ Backend FastAPI con seguridad y rate limiting:
   GET  /api/docs/{file}   → sirve PDF
 
 Seguridad:
-  - API key opcional (env CHAT_API_KEY). Si está, requerida en header.
+  - Auth JWT (Authorization: Bearer <token>). Ver scripts/auth.py.
+  - Login con usuarios en data/users.json (scrypt hashed).
   - Rate limit por IP: chat 20/min, models 60/min, otros más permisivos.
   - CORS restrictivo (env ALLOWED_ORIGINS, default localhost).
   - Inputs sanitizados; errores no exponen stack traces.
@@ -71,12 +74,16 @@ STATIC_DIR.mkdir(exist_ok=True)
 DOCS_DIR = SCRIPTS_DIR.parent / "data" / "docs"
 
 # ── Security config ──────────────────────────────────────────────────────
-# Si CHAT_API_KEY está vacía, modo "open" (legacy/dev).
-# Si está, el cliente debe mandar X-API-Key: <key>.
-CHAT_API_KEY: str = os.environ.get("CHAT_API_KEY", "").strip()
 ALLOWED_ORIGINS = [o.strip() for o in os.environ.get("ALLOWED_ORIGINS", "http://localhost:8090,http://127.0.0.1:8090").split(",") if o.strip()]
 MAX_MESSAGE_LEN = int(os.environ.get("MAX_MESSAGE_LEN", "2000"))
 BLOCKED_UA_PATTERNS = [r"sqlmap", r"nikto", r"masscan", r"nmap"]  # bots/scanners comunes
+
+# Auth: importar modulo y crear users.json al arranque
+from auth import (
+    ensure_users_file, login as auth_login, get_user_from_token,
+    extract_bearer_token, CurrentUser, get_user as get_user_record,
+)
+ensure_users_file()  # crea data/users.json con admin/admin123 si no existe
 
 
 # ── FastAPI app ──────────────────────────────────────────────────────────
@@ -88,7 +95,7 @@ app.add_middleware(
     allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["GET", "POST"],
-    allow_headers=["X-API-Key", "Content-Type"],
+    allow_headers=["Authorization", "Content-Type"],
     max_age=3600,
 )
 
@@ -100,15 +107,29 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # ── Security dependencies ────────────────────────────────────────────────
 
-def require_api_key(request: Request) -> None:
-    """Si CHAT_API_KEY está configurada, requiere header X-API-Key."""
-    if not CHAT_API_KEY:
-        return  # modo open (dev)
-    provided = request.headers.get("X-API-Key", "")
-    # Constant-time comparison para evitar timing attacks
-    if not hmac.compare_digest(provided, CHAT_API_KEY):
-        log.warning("auth_fail ip=%s path=%s", get_remote_address(request), request.url.path)
-        raise HTTPException(status_code=401, detail="Invalid or missing API key")
+def get_current_user(request: Request) -> CurrentUser:
+    """Dependencia FastAPI: extrae JWT del header Authorization: Bearer <token>,
+    valida firma + expiración, y devuelve CurrentUser. Si falla, 401."""
+    auth_header = request.headers.get("authorization", "")
+    token = extract_bearer_token(auth_header)
+    if not token:
+        log.warning("auth_fail ip=%s path=%s reason=no_token",
+                    get_remote_address(request), request.url.path)
+        raise HTTPException(
+            status_code=401,
+            detail="Authentication required",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    user = get_user_from_token(token)
+    if not user:
+        log.warning("auth_fail ip=%s path=%s reason=invalid_token",
+                    get_remote_address(request), request.url.path)
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or expired token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return user
 
 
 def block_scanners(request: Request) -> None:
@@ -124,6 +145,46 @@ def block_scanners(request: Request) -> None:
         if re.search(pattern, ua):
             log.warning("scanner_blocked ua=%s ip=%s", ua, get_remote_address(request))
             raise HTTPException(status_code=403, detail="Forbidden")
+
+
+# ── Auth endpoints ───────────────────────────────────────────────────────
+
+class LoginRequest(BaseModel):
+    username: str = Field(..., min_length=1, max_length=64)
+    password: str = Field(..., min_length=1, max_length=256)
+
+
+@app.post("/api/auth/login")
+@limiter.limit("10/minute")
+async def login_endpoint(
+    request: Request,
+    req: LoginRequest,
+    _: None = Depends(block_scanners),
+):
+    """POST /api/auth/login con {username, password}. Devuelve {token, user, expires_in}.
+    401 si credenciales invalidas. Rate-limited a 10/min por IP (anti brute force)."""
+    ip = get_remote_address(request)
+    result = auth_login(req.username, req.password)
+    if not result:
+        log.warning("login_fail ip=%s user=%s", ip, req.username)
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+    log.info("login_ok ip=%s user=%s role=%s",
+             ip, result["user"]["username"], result["user"]["role"])
+    return result
+
+
+@app.get("/api/auth/me")
+async def me_endpoint(
+    user: CurrentUser = Depends(get_current_user),
+    _: None = Depends(block_scanners),
+):
+    """GET /api/auth/me — devuelve info del usuario autenticado. Útil para
+    que el frontend sepa si el JWT sigue siendo válido al recargar."""
+    return {
+        "username": user.username,
+        "role": user.role,
+        "is_admin": user.is_admin(),
+    }
 
 
 # ── Schemas ───────────────────────────────────────────────────────────────
@@ -208,7 +269,7 @@ async def health(request: Request, _: None = Depends(block_scanners)):
 
 @app.get("/api/models")
 @limiter.limit("60/minute")
-async def list_models(request: Request, _: None = Depends(require_api_key), __: None = Depends(block_scanners)):
+async def list_models(request: Request, user: CurrentUser = Depends(get_current_user), __: None = Depends(block_scanners)):
     try:
         with urllib.request.urlopen("http://localhost:11434/api/tags", timeout=5) as r:
             data = json.loads(r.read().decode("utf-8"))
@@ -228,7 +289,7 @@ async def list_models(request: Request, _: None = Depends(require_api_key), __: 
 async def chat(
     request: Request,
     req: ChatRequest,
-    _: None = Depends(require_api_key),
+    user: CurrentUser = Depends(get_current_user),
     __: None = Depends(block_scanners),
 ):
     t0 = time.time()
@@ -267,7 +328,7 @@ async def chat(
 
 @app.get("/api/docs")
 @limiter.limit("60/minute")
-async def list_docs(request: Request, _: None = Depends(require_api_key), __: None = Depends(block_scanners)):
+async def list_docs(request: Request, user: CurrentUser = Depends(get_current_user), __: None = Depends(block_scanners)):
     if not DOCS_DIR.exists():
         return {"docs": []}
     docs = []
@@ -287,7 +348,7 @@ async def list_docs(request: Request, _: None = Depends(require_api_key), __: No
 async def get_doc(
     request: Request,
     filename: str,
-    _: None = Depends(require_api_key),
+    user: CurrentUser = Depends(get_current_user),
     __: None = Depends(block_scanners),
 ):
     # Sanitize: solo nombre, no paths ni traversal
@@ -318,40 +379,54 @@ async def stream_agent(req: ChatRequest):
       - error: {message} si algo falla
     """
     t0 = time.time()
+    iterations = 0
     try:
         from agent.run import run_agent_streaming
-        # Ejecutar el generador en un thread (es bloqueante, no async)
-        # yield los eventos segun llegan
-        def collect_events():
-            """Ejecuta run_agent_streaming y retorna una lista de eventos.
-            Hacemos collect en lugar de streaming del generador para simplificar
-            y no perder eventos si hay excepcion."""
-            return list(run_agent_streaming(req.message, model=req.model, verbose=False))
+        # Streaming REAL token-a-token: ejecutamos el generador en un hilo
+        # y empujamos cada evento a una queue asincrona. La coroutine hace
+        # yield de los eventos conforme llegan, para que el cliente vea
+        # "Pensando... (iter N)" antes de la primera respuesta.
+        loop = asyncio.get_running_loop()
+        queue: asyncio.Queue = asyncio.Queue()
 
-        events = await asyncio.to_thread(collect_events)
+        def producer():
+            try:
+                for ev in run_agent_streaming(req.message, model=req.model, verbose=False):
+                    loop.call_soon_threadsafe(queue.put_nowait, ev)
+                loop.call_soon_threadsafe(queue.put_nowait, None)  # sentinel
+            except Exception as e:
+                loop.call_soon_threadsafe(queue.put_nowait, {"type": "error", "message": str(e)})
+                loop.call_soon_threadsafe(queue.put_nowait, None)
+
+        # Arrancar el productor en background
+        future = loop.run_in_executor(None, producer)
+
+        # Drenar la queue y hacer yield de cada evento al cliente
+        while True:
+            ev = await queue.get()
+            if ev is None:  # sentinel = productor terminó
+                break
+            et = ev.get("type")
+            if et == "thinking":
+                iterations = ev.get("iter", iterations)
+                yield _sse("thinking", {"iter": iterations})
+            elif et == "tool_call":
+                yield _sse("tool_call", {
+                    "name": ev["name"],
+                    "arguments": ev.get("arguments", {}),
+                    "result": ev.get("result"),
+                    "duration_ms": ev.get("duration_ms"),
+                })
+            elif et == "token":
+                yield _sse("token", {"text": ev["text"]})
+            elif et == "error":
+                yield _sse("error", {"message": ev.get("message", "Internal error")})
+            elif et == "done":
+                iterations = ev.get("iterations", iterations)
     except Exception as e:
         log.exception("stream error: %s", e)
         yield _sse("error", {"message": "Internal error"})
         return
-
-    iterations = 0
-    for ev in events:
-        et = ev.get("type")
-        if et == "thinking":
-            iterations = ev.get("iter", iterations)
-        elif et == "tool_call":
-            yield _sse("tool_call", {
-                "name": ev["name"],
-                "arguments": ev.get("arguments", {}),
-                "result": ev.get("result"),
-                "duration_ms": ev.get("duration_ms"),
-            })
-        elif et == "token":
-            yield _sse("token", {"text": ev["text"]})
-        elif et == "error":
-            yield _sse("error", {"message": ev["message"]})
-        elif et == "done":
-            iterations = ev.get("iterations", iterations)
 
     elapsed = time.time() - t0
     yield _sse("done", {
@@ -365,36 +440,52 @@ async def stream_one_model(message: str, model: str):
     """Generador SSE para un solo modelo. Etiqueta eventos con 'model' field
     para que el frontend pueda separar los streams de cada modelo."""
     t0 = time.time()
+    iterations = 0
     try:
         from agent.run import run_agent_streaming
-        events = await asyncio.to_thread(
-            lambda: list(run_agent_streaming(message, model=model, verbose=False))
-        )
+        # Mismo patron queue/producer que stream_agent: el productor en hilo
+        # empuja cada evento a la queue, y aqui hacemos yield conforme llegan.
+        loop = asyncio.get_running_loop()
+        queue: asyncio.Queue = asyncio.Queue()
+
+        def producer():
+            try:
+                for ev in run_agent_streaming(message, model=model, verbose=False):
+                    loop.call_soon_threadsafe(queue.put_nowait, ev)
+                loop.call_soon_threadsafe(queue.put_nowait, None)
+            except Exception as e:
+                loop.call_soon_threadsafe(queue.put_nowait, {"type": "error", "message": str(e)})
+                loop.call_soon_threadsafe(queue.put_nowait, None)
+
+        loop.run_in_executor(None, producer)
+
+        while True:
+            ev = await queue.get()
+            if ev is None:
+                break
+            et = ev.get("type")
+            if et == "thinking":
+                iterations = ev.get("iter", iterations)
+                yield _sse("thinking", {"model": model, "iter": iterations})
+            elif et == "tool_call":
+                yield _sse("tool_call", {
+                    "model": model,
+                    "name": ev["name"],
+                    "arguments": ev.get("arguments", {}),
+                    "result": ev.get("result"),
+                    "duration_ms": ev.get("duration_ms"),
+                })
+            elif et == "token":
+                yield _sse("token", {"model": model, "text": ev["text"]})
+            elif et == "error":
+                yield _sse("error", {"model": model, "message": ev.get("message", "Internal error")})
+            elif et == "done":
+                iterations = ev.get("iterations", iterations)
+
     except Exception as e:
         log.exception("compare stream error for %s: %s", model, e)
         yield _sse("error", {"model": model, "message": "Internal error"})
         return
-
-    iterations = 0
-    for ev in events:
-        et = ev.get("type")
-        if et == "thinking":
-            iterations = ev.get("iter", iterations)
-            yield _sse("thinking", {"model": model, "iter": iterations})
-        elif et == "tool_call":
-            yield _sse("tool_call", {
-                "model": model,
-                "name": ev["name"],
-                "arguments": ev.get("arguments", {}),
-                "result": ev.get("result"),
-                "duration_ms": ev.get("duration_ms"),
-            })
-        elif et == "token":
-            yield _sse("token", {"model": model, "text": ev["text"]})
-        elif et == "error":
-            yield _sse("error", {"model": model, "message": ev["message"]})
-        elif et == "done":
-            iterations = ev.get("iterations", iterations)
 
     elapsed = time.time() - t0
     yield _sse("done", {
@@ -460,7 +551,7 @@ class CompareRequest(BaseModel):
 async def chat_compare(
     request: Request,
     req: CompareRequest,
-    _: None = Depends(require_api_key),
+    user: CurrentUser = Depends(get_current_user),
     __: None = Depends(block_scanners),
 ):
     """Compara dos modelos side-by-side sobre la misma query.
@@ -482,7 +573,7 @@ async def chat_compare(
 async def chat_stream(
     request: Request,
     req: ChatRequest,
-    _: None = Depends(require_api_key),
+    user: CurrentUser = Depends(get_current_user),
     __: None = Depends(block_scanners),
 ):
     # Sanitizar input

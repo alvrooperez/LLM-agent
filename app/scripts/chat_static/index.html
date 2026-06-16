@@ -173,7 +173,7 @@
     .status-dot.down { background: #ef4444; }
 
     /* ── Main ─────────────────────────────────────────────────── */
-    .main { display: flex; flex-direction: column; min-width: 0; background: var(--bg); }
+    .main { display: flex; flex-direction: column; min-width: 0; min-height: 0; height: 100%; background: var(--bg); }
     /* ── Topbar ──────────────────────────────────────────────── */
     .topbar {
       display: flex;
@@ -213,7 +213,8 @@
 
     /* ── Chat area ───────────────────────────────────────────── */
     .chat-area {
-      flex: 1;
+      flex: 1 1 0;
+      min-height: 0;
       overflow-y: auto;
       padding: 20px 0 40px;
       scroll-behavior: smooth;
@@ -225,27 +226,88 @@
     }
     /* Welcome screen */
     .welcome {
-      text-align: center;
-      padding: 80px 20px 40px;
+      text-align: left;
+      padding: 40px 20px 60px;
       color: var(--text);
+      max-width: 880px;
+      margin: 0 auto;
+    }
+    .welcome-hero { text-align: center; margin-bottom: 36px; }
+    .welcome-badges {
+      display: flex; flex-wrap: wrap; justify-content: center;
+      gap: 6px; margin-bottom: 18px;
+    }
+    .badge {
+      padding: 3px 10px;
+      background: var(--bg-elev);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 11px; font-weight: 500;
+      color: var(--text-soft);
+      font-family: -apple-system, sans-serif;
+    }
+    .badge-accent {
+      color: var(--accent);
+      border-color: var(--accent);
+      background: var(--accent-soft);
     }
     .welcome h1 {
-      font-size: 32px;
-      font-weight: 500;
-      margin: 0 0 12px;
+      font-size: 38px; font-weight: 600;
+      margin: 0 0 10px;
       font-family: ui-serif, Georgia, serif;
+      letter-spacing: -0.01em;
     }
-    .welcome p {
+    .welcome-sub {
       color: var(--text-soft);
       font-size: 15px;
-      margin: 0 0 32px;
+      max-width: 620px;
+      margin: 0 auto;
+      line-height: 1.5;
+    }
+    .welcome-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      margin: 0 0 36px;
+    }
+    .stat {
+      background: var(--bg-elev);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 14px 12px;
+      transition: border-color 0.15s, transform 0.15s;
+    }
+    .stat:hover { border-color: var(--accent); transform: translateY(-1px); }
+    .stat-val {
+      font-size: 24px; font-weight: 700;
+      color: var(--accent);
+      line-height: 1;
+      font-family: -apple-system, sans-serif;
+    }
+    .stat-label {
+      font-size: 11px; font-weight: 600;
+      color: var(--text);
+      margin-top: 6px;
+      font-family: -apple-system, sans-serif;
+    }
+    .stat-sub {
+      font-size: 10px; color: var(--text-soft);
+      margin-top: 2px;
+      font-family: -apple-system, sans-serif;
+    }
+    .welcome-section { margin-top: 28px; }
+    .welcome-section h3 {
+      font-size: 12px; font-weight: 600;
+      color: var(--text-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin: 0 0 12px;
+      font-family: -apple-system, sans-serif;
     }
     .suggestions {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 8px;
-      max-width: 560px;
-      margin: 0 auto;
     }
     .suggestion {
       padding: 10px 14px;
@@ -262,6 +324,50 @@
     .suggestion:hover { background: var(--accent-soft); border-color: var(--accent); }
     .suggestion .title { font-weight: 500; }
     .suggestion .sub { color: var(--text-muted); font-size: 11px; margin-top: 2px; }
+    .shortcuts {
+      display: flex; flex-wrap: wrap; gap: 8px;
+    }
+    .shortcut {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 12px;
+      background: var(--bg-elev);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 12px;
+      color: var(--text-soft);
+      font-family: -apple-system, sans-serif;
+    }
+    .shortcut kbd {
+      display: inline-block;
+      padding: 1px 6px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-family: ui-monospace, "Cascadia Code", monospace;
+      font-size: 11px;
+      color: var(--text);
+      box-shadow: 0 1px 0 var(--border);
+    }
+    .links {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 10px;
+    }
+    .link-card {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 16px;
+      background: var(--bg-elev);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      text-decoration: none;
+      color: var(--text);
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .link-card:hover { background: var(--accent-soft); border-color: var(--accent); }
+    .link-icon { font-size: 22px; }
+    .link-body { flex: 1; min-width: 0; }
+    .link-title { font-size: 13px; font-weight: 600; }
+    .link-sub { font-size: 11px; color: var(--text-soft); margin-top: 1px; }
 
     /* ── Messages ────────────────────────────────────────────── */
     .msg-row {
@@ -617,10 +723,139 @@
       .app { grid-template-columns: 1fr; }
       .sidebar { display: none; }
     }
+    /* ── Login screen ───────────────────────────────────── */
+    .login-screen {
+      position: fixed; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--bg);
+      z-index: 9999;
+    }
+    .login-card {
+      width: 380px; max-width: 92vw;
+      padding: 36px 32px 28px;
+      background: var(--bg-elev);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--shadow-md);
+      text-align: center;
+    }
+    .login-logo {
+      width: 56px; height: 56px;
+      margin: 0 auto 18px;
+      background: var(--accent);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--accent-text); font-weight: 700; font-size: 22px;
+      font-family: ui-serif, Georgia, serif;
+    }
+    .login-title {
+      margin: 0 0 6px; font-size: 22px; font-weight: 600;
+      font-family: -apple-system, sans-serif; color: var(--text);
+    }
+    .login-sub {
+      margin: 0 0 24px; color: var(--text-soft); font-size: 13px;
+    }
+    .login-form {
+      display: flex; flex-direction: column; gap: 14px;
+      text-align: left;
+    }
+    .login-form label {
+      display: flex; flex-direction: column; gap: 6px;
+      font-size: 13px; color: var(--text-soft);
+      font-family: -apple-system, sans-serif; font-weight: 500;
+    }
+    .login-form input {
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      font-family: -apple-system, sans-serif;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .login-form input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+    .login-submit {
+      margin-top: 6px;
+      padding: 11px;
+      background: var(--accent);
+      color: var(--accent-text);
+      border: none;
+      border-radius: 8px;
+      font-size: 14px; font-weight: 600;
+      font-family: -apple-system, sans-serif;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.05s;
+    }
+    .login-submit:hover:not(:disabled) { filter: brightness(1.1); }
+    .login-submit:active:not(:disabled) { transform: translateY(1px); }
+    .login-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+    .login-error {
+      padding: 10px 12px;
+      background: #fef2f2; color: #991b1b;
+      border: 1px solid #fecaca;
+      border-radius: 8px;
+      font-size: 13px; font-family: -apple-system, sans-serif;
+      text-align: left;
+    }
+    [data-theme="dark"] .login-error {
+      background: #2a1518; color: #fca5a5; border-color: #5a1f24;
+    }
+    .login-hint {
+      margin: 18px 0 0; font-size: 12px; color: var(--text-soft);
+      font-family: -apple-system, sans-serif;
+    }
+    .login-hint code {
+      background: var(--bg); padding: 2px 6px; border-radius: 4px;
+      font-size: 12px; color: var(--text);
+    }
+    .login-warn { color: var(--text-soft); font-size: 11px; margin-top: 6px; }
+    .user-info {
+      display: flex; align-items: center; gap: 6px;
+      padding: 4px 10px; border-radius: 6px;
+      font-size: 12px; color: var(--text-soft);
+      font-family: -apple-system, sans-serif;
+    }
+    .user-info .user-name { color: var(--text); font-weight: 500; }
+    .user-info button {
+      background: transparent; border: none; color: var(--text-soft);
+      cursor: pointer; padding: 2px 6px; border-radius: 4px;
+      font-size: 11px; font-family: -apple-system, sans-serif;
+    }
+    .user-info button:hover { background: var(--bg-soft); color: var(--text); }
   </style>
 </head>
 <body>
-  <div class="app">
+  <!-- ── Login screen (oculta hasta que el user hace login) ─────── -->
+  <div id="login-screen" class="login-screen" style="display:none">
+    <div class="login-card">
+      <div class="login-logo">AI</div>
+      <h1 class="login-title">AI Engineering Chat</h1>
+      <p class="login-sub">Sign in to continue</p>
+      <form id="login-form" class="login-form" autocomplete="on">
+        <label>
+          <span>Username</span>
+          <input type="text" id="login-username" autocomplete="username" required
+                 maxlength="64" autofocus />
+        </label>
+        <label>
+          <span>Password</span>
+          <input type="password" id="login-password" autocomplete="current-password"
+                 required maxlength="256" />
+        </label>
+        <button type="submit" id="login-submit" class="login-submit">Sign in</button>
+        <div id="login-error" class="login-error" style="display:none"></div>
+      </form>
+      <p class="login-hint">Default: <code>admin</code> / <code>admin123</code></p>
+      <p class="login-hint login-warn">⚠️ Local dev only — not for production deployment.</p>
+    </div>
+  </div>
+
+  <div class="app" id="app-root" style="display:none">
     <!-- ── Sidebar ──────────────────────────────────────── -->
     <aside class="sidebar">
       <div class="sb-top">
@@ -655,6 +890,7 @@
           <span class="icon">🏗️</span>
           <span>Architecture</span>
         </a>
+        <div class="user-info" id="user-info"></div>
       </div>
     </aside>
 
@@ -676,25 +912,111 @@
       <div class="chat-area" id="chat-area">
         <div class="chat-inner" id="chat-inner">
           <div class="welcome" id="welcome">
-            <h1>AI Engineering Chat</h1>
-            <p>Local LLM with RAG, fine-tuning &amp; tool calling — running on RTX 3050 4GB</p>
-            <div class="suggestions">
-              <button class="suggestion" data-q="Dime el estado de la GPU">
-                <div class="title">GPU status</div>
-                <div class="sub">Check VRAM and utilization</div>
-              </button>
-              <button class="suggestion" data-q="¿Cuántos puntos hay en la colección de Qdrant?">
-                <div class="title">Qdrant stats</div>
-                <div class="sub">Knowledge base size</div>
-              </button>
-              <button class="suggestion" data-q="Busca en los docs cómo configurar fine-tuning">
-                <div class="title">RAG search</div>
-                <div class="sub">Query the docs</div>
-              </button>
-              <button class="suggestion" data-q="Genera un PDF de tipo project_report con título Demo">
-                <div class="title">Generate PDF</div>
-                <div class="sub">Use the write_document tool</div>
-              </button>
+            <div class="welcome-hero">
+              <div class="welcome-badges">
+                <span class="badge badge-accent">RTX 3050 4GB</span>
+                <span class="badge">qwen2.5:3b</span>
+                <span class="badge">Unsloth LoRA</span>
+                <span class="badge">6 tools</span>
+                <span class="badge">RAG</span>
+                <span class="badge">JWT auth</span>
+              </div>
+              <h1>AI Engineering Chat</h1>
+              <p class="welcome-sub">Local LLM agent with RAG, fine-tuning &amp; tool calling — running entirely on a 4GB laptop GPU. No cloud APIs, MIT-licensed.</p>
+            </div>
+
+            <div class="welcome-stats">
+              <div class="stat">
+                <div class="stat-val">68</div>
+                <div class="stat-label">tokens/sec</div>
+                <div class="stat-sub">qwen2.5:3b Q4_K_M</div>
+              </div>
+              <div class="stat">
+                <div class="stat-val">+83%</div>
+                <div class="stat-label">answer relevance</div>
+                <div class="stat-sub">RAG vs no-RAG</div>
+              </div>
+              <div class="stat">
+                <div class="stat-val">6</div>
+                <div class="stat-label">real tools</div>
+                <div class="stat-sub">RAG, GPU, Qdrant, PDF…</div>
+              </div>
+              <div class="stat">
+                <div class="stat-val">5/5</div>
+                <div class="stat-label">multi-tool chains</div>
+                <div class="stat-sub">agent plans 2-3 tools</div>
+              </div>
+              <div class="stat">
+                <div class="stat-val">93</div>
+                <div class="stat-label">tests passing</div>
+                <div class="stat-sub">89 unit + 4 E2E</div>
+              </div>
+              <div class="stat">
+                <div class="stat-val">~2s</div>
+                <div class="stat-label">TTFT</div>
+                <div class="stat-sub">time to first token</div>
+              </div>
+            </div>
+
+            <div class="welcome-section">
+              <h3>Try it</h3>
+              <div class="suggestions">
+                <button class="suggestion" data-q="Dime el estado de la GPU">
+                  <div class="title">GPU status</div>
+                  <div class="sub">Check VRAM and utilization</div>
+                </button>
+                <button class="suggestion" data-q="¿Cuántos puntos hay en la colección de Qdrant?">
+                  <div class="title">Qdrant stats</div>
+                  <div class="sub">Knowledge base size</div>
+                </button>
+                <button class="suggestion" data-q="Busca en los docs cómo configurar fine-tuning">
+                  <div class="title">RAG search</div>
+                  <div class="sub">Query the docs</div>
+                </button>
+                <button class="suggestion" data-q="Genera un PDF de tipo project_report con título Demo">
+                  <div class="title">Generate PDF</div>
+                  <div class="sub">Use the write_document tool</div>
+                </button>
+              </div>
+            </div>
+
+            <div class="welcome-section">
+              <h3>Shortcuts</h3>
+              <div class="shortcuts">
+                <div class="shortcut"><kbd>Enter</kbd><span>Send</span></div>
+                <div class="shortcut"><kbd>Esc</kbd><span>Stop / close</span></div>
+                <div class="shortcut"><kbd>Ctrl</kbd>+<kbd>K</kbd><span>New chat</span></div>
+                <div class="shortcut"><kbd>Ctrl</kbd>+<kbd>L</kbd><span>Focus input</span></div>
+                <div class="shortcut"><kbd>Ctrl</kbd>+<kbd>M</kbd><span>Compare models</span></div>
+                <div class="shortcut"><kbd>Ctrl</kbd>+<kbd>/</kbd><span>Help</span></div>
+              </div>
+            </div>
+
+            <div class="welcome-section">
+              <h3>Explore the project</h3>
+              <div class="links">
+                <a class="link-card" href="/architecture" target="_blank">
+                  <div class="link-icon">🏗️</div>
+                  <div class="link-body">
+                    <div class="link-title">Architecture diagram</div>
+                    <div class="link-sub">Interactive system map</div>
+                  </div>
+                </a>
+                <a class="link-card" href="https://github.com/alvrooperez/LLM-agent" target="_blank" rel="noopener">
+                  <div class="link-icon">📦</div>
+                  <div class="link-body">
+                    <div class="link-title">Source on GitHub</div>
+                    <div class="link-sub">MIT-licensed, 18 slides, 93 tests</div>
+                  </div>
+                </a>
+                <a class="link-card" href="#" onclick="alert('README: see /architecture page for system diagram.\\n\\nHighlights:\\n- Local LLM (no cloud)\\n- RAG with +83% improvement\\n- LoRA fine-tuning (honest report)\\n- 6 real tools, agent loop\\n- 93 tests\\n- JWT auth, security from day 1'); return false;">
+                  <div class="link-icon">📖</div>
+                  <div class="link-body">
+                    <div class="link-title">What's inside</div>
+                    <div class="link-sub">Click for project highlights</div>
+                  </div>
+                </a>
+              </div>
             </div>
           </div>
         </div>
@@ -769,6 +1091,130 @@
       const saved = localStorage.getItem('theme') ||
         (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
       document.documentElement.setAttribute('data-theme', saved);
+    })();
+
+    // ── Auth ───────────────────────────────────────────────
+    // Token JWT en sessionStorage (se pierde al cerrar tab — más seguro
+    // que localStorage para una app local). El wrapper authFetch() lo
+    // añade automáticamente a cada request.
+    const TOKEN_KEY = 'chat_jwt';
+    const USER_KEY = 'chat_user';
+
+    function getToken() { return sessionStorage.getItem(TOKEN_KEY) || ''; }
+    function setToken(token, user) {
+      sessionStorage.setItem(TOKEN_KEY, token);
+      if (user) sessionStorage.setItem(USER_KEY, JSON.stringify(user));
+    }
+    function clearToken() {
+      sessionStorage.removeItem(TOKEN_KEY);
+      sessionStorage.removeItem(USER_KEY);
+    }
+    function getStoredUser() {
+      try { return JSON.parse(sessionStorage.getItem(USER_KEY) || 'null'); }
+      catch { return null; }
+    }
+
+    async function authFetch(url, opts = {}) {
+      const token = getToken();
+      const headers = { ...(opts.headers || {}) };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const r = await fetch(url, { ...opts, headers });
+      if (r.status === 401) {
+        // Token inválido o expirado — volver al login
+        clearToken();
+        showLogin();
+        throw new Error('Session expired. Please sign in again.');
+      }
+      return r;
+    }
+
+    function showLogin() {
+      document.getElementById('login-screen').style.display = 'flex';
+      document.getElementById('app-root').style.display = 'none';
+      setTimeout(() => document.getElementById('login-username').focus(), 50);
+    }
+    function showApp(user) {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app-root').style.display = 'grid';
+      // Mostrar info de usuario en el sidebar
+      const userInfo = document.getElementById('user-info');
+      if (userInfo && user) {
+        userInfo.innerHTML = `
+          <span class="user-name">${escapeHtml(user.username)}</span>
+          <button id="logout-btn" title="Sign out">Sign out</button>
+        `;
+        document.getElementById('logout-btn').addEventListener('click', logout);
+      }
+    }
+
+    async function doLogin(username, password) {
+      const errBox = document.getElementById('login-error');
+      const submitBtn = document.getElementById('login-submit');
+      errBox.style.display = 'none';
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Signing in...';
+      try {
+        const r = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
+        });
+        if (!r.ok) {
+          const err = await r.json().catch(() => ({}));
+          throw new Error(err.detail || `HTTP ${r.status}`);
+        }
+        const data = await r.json();
+        setToken(data.token, data.user);
+        showApp(data.user);
+      } catch (e) {
+        errBox.textContent = e.message || 'Login failed';
+        errBox.style.display = 'block';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Sign in';
+      }
+    }
+
+    function logout() {
+      clearToken();
+      // Limpiar UI
+      const userInfo = document.getElementById('user-info');
+      if (userInfo) userInfo.innerHTML = '';
+      const convList = document.getElementById('conv-list');
+      if (convList) {
+        const label = convList.querySelector('.conv-list-label');
+        convList.innerHTML = '';
+        if (label) convList.appendChild(label);
+      }
+      showLogin();
+    }
+
+    // Wire login form
+    document.getElementById('login-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const u = document.getElementById('login-username').value.trim();
+      const p = document.getElementById('login-password').value;
+      if (u && p) doLogin(u, p);
+    });
+
+    // Bootstrap: si hay token, intentar validarlo contra /api/auth/me
+    (async function bootstrapAuth() {
+      const token = getToken();
+      if (!token) {
+        showLogin();
+        return;
+      }
+      try {
+        const r = await authFetch('/api/auth/me');
+        if (r.ok) {
+          const user = await r.json();
+          showApp(user);
+        } else {
+          showLogin();
+        }
+      } catch {
+        showLogin();
+      }
     })();
 
     // ── Refs ───────────────────────────────────────────────
@@ -932,6 +1378,10 @@
       });
     }
     function md(text) {
+      // Quitar tokens de control del modelo (no deberian llegar al usuario)
+      text = text.replace(/\[(?:TAREA|TEMA)\s*COMPLETADA\]/gi, "");
+      text = text.replace(/\[TAREA_COMPLETADA\]/g, "");
+      text = text.replace(/\[TEMA_COMPLETADO\]/g, "");
       let t = escapeHtml(text);
       t = t.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) =>
         `<pre><code>${code.trim()}</code></pre>`);
@@ -980,8 +1430,32 @@
     }
 
     // ── Scroll ───────────────────────────────────────────
-    function scrollToBottom() {
-      requestAnimationFrame(() => { chatArea.scrollTop = chatArea.scrollHeight; });
+    // Auto-scroll inteligente: solo hace scroll si el usuario está cerca
+    // del fondo (margen 60px). Si el usuario scrolleó arriba para leer
+    // algo, NO le saltamos la vista. Y re-llamamos con RAF hasta que
+    // se asiente el DOM (el streaming mete tokens y cambia la altura).
+    function isAtBottom() {
+      return chatArea.scrollHeight - chatArea.scrollTop - chatArea.clientHeight < 60;
+    }
+    function scrollToBottom(force = false) {
+      if (force || isAtBottom()) {
+        chatArea.scrollTop = chatArea.scrollHeight;
+      }
+    }
+    // Auto-scroll continuo mientras el chat está activo
+    let _scrollRaf = null;
+    function startAutoScroll() {
+      const tick = () => {
+        scrollToBottom();  // solo si está cerca del fondo
+        _scrollRaf = requestAnimationFrame(tick);
+      };
+      _scrollRaf = requestAnimationFrame(tick);
+    }
+    function stopAutoScroll() {
+      if (_scrollRaf) cancelAnimationFrame(_scrollRaf);
+      _scrollRaf = null;
+      // Al final, forzar scroll al fondo (respuesta terminada)
+      scrollToBottom(true);
     }
 
     // ── Health ───────────────────────────────────────────
@@ -1004,7 +1478,7 @@
     // ── Docs modal ──────────────────────────────────────
     async function loadDocs() {
       try {
-        const r = await fetch('/api/docs');
+        const r = await authFetch('/api/docs');
         const d = await r.json();
         if (!d.docs || d.docs.length === 0) {
           docList.innerHTML = '<div class="empty-state">No PDFs yet.<br>Ask the agent: <em>"Generate a project_report PDF"</em></div>';
@@ -1109,7 +1583,7 @@
       const t0 = performance.now();
 
       try {
-        const r = await fetch('/api/chat/compare', {
+        const r = await authFetch('/api/chat/compare', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ message: text }),
@@ -1246,15 +1720,22 @@
       renderPersistedMessage({ role: 'user', content: text });
       scrollToBottom();
 
-      // Assistant placeholder
+      // Assistant placeholder con estado de thinking
       const row = document.createElement('div');
       row.className = 'msg-row assistant';
       const bub = document.createElement('div');
       bub.className = 'assistant-bubble';
-      bub.innerHTML = '<span class="thinking">Thinking</span>';
+      const status = document.createElement('div');
+      status.className = 'thinking-status';
+      status.innerHTML = '<span class="thinking-dot"></span><span class="thinking-text">Pensando...</span>';
+      bub.appendChild(status);
       row.appendChild(bub);
       chatInner.appendChild(row);
       scrollToBottom();
+      const updateThinking = (msg) => {
+        const t = status.querySelector('.thinking-text');
+        if (t) t.textContent = msg;
+      };
 
       const t0 = performance.now();
       let toolCalls = [];
@@ -1263,7 +1744,7 @@
       let aborted = false;
 
       try {
-        const r = await fetch('/api/chat/stream', {
+        const r = await authFetch('/api/chat/stream', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ message: text, model: modelSel.value }),
@@ -1277,6 +1758,8 @@
         const decoder = new TextDecoder();
         let buf = '';
         bub.innerHTML = '';
+        // Auto-scroll mientras llega contenido
+        startAutoScroll();
 
         while (true) {
           const { done, value } = await reader.read();
@@ -1295,17 +1778,22 @@
             if (!data) continue;
             let payload;
             try { payload = JSON.parse(data); } catch { continue; }
-            if (event === 'tool_call') {
+            if (event === 'thinking') {
+              // Actualizar indicador de thinking con la iter actual
+              updateThinking(`Pensando... (iteración ${payload.iter || '?'})`);
+            } else if (event === 'tool_call') {
               toolCalls.push(payload);
               const cardHtml = toolCardHtml(payload);
               bub.insertAdjacentHTML('beforeend', cardHtml);
-              scrollToBottom();
+              updateThinking(`Ejecutando ${payload.name}...`);
             } else if (event === 'token') {
               fullText += payload.text;
               const textHtml = md(linkifyPdfs(fullText));
+              // Quitar el status "Pensando..." cuando llegan los primeros tokens
+              const status = bub.querySelector('.thinking-status');
+              if (status) status.remove();
               bub.innerHTML = (toolCalls.length ? toolCalls.map(toolCardHtml).join('') : '') + textHtml;
               attachToolToggles(bub);
-              scrollToBottom();
             } else if (event === 'done') {
               meta = `${payload.iterations} iter · ${payload.elapsed_sec}s · ${payload.model}`;
             } else if (event === 'error') {
@@ -1313,6 +1801,8 @@
             }
           }
         }
+        // Auto-scroll fuera (forzar al fondo al terminar)
+        stopAutoScroll();
         // Final meta
         const wallTime = ((performance.now() - t0) / 1000).toFixed(1);
         if (meta) {

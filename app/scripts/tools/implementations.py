@@ -3,7 +3,7 @@ Herramientas del agente Phase 4.
 Cada función va con @tool y se registra automáticamente en TOOL_REGISTRY.
 
 Ejecutar las tools:
-  - search_docs -> llama a RAG API en :8000
+  - search_docs -> RAG embebido: embed con SentenceTransformer + query a Qdrant :6333
   - list_models -> llama a Ollama API en :11434
   - get_gpu_stats -> subprocess a nvidia-smi
   - get_collection_info -> llama a Qdrant REST API en :6333
@@ -50,35 +50,62 @@ def _ollama_request(path: str, body: dict = None, timeout: int = 30, retries: in
     return f"[ERROR] Ollama no responde tras {retries+1} intentos ({url}): {last_err}"
 
 
-def _rag_request(query: str, k: int = 3, timeout: int = 60, retries: int = 1) -> str:
-    """Llama a RAG API con retry. Parsea respuesta y formatea con fuentes."""
-    url = "http://localhost:8000/ask"
-    payload = json.dumps({"question": query, "k": k}).encode()
+def _rag_request(query: str, k: int = 3, timeout: int = 30, retries: int = 1) -> str:
+    """RAG embebido: embed con SentenceTransformer + query a Qdrant. Devuelve chunks con fuentes.
+
+    Ya no dependemos de un servidor HTTP en :8000. La lógica vive aquí mismo para que
+    el agente funcione con un único proceso (chat_app).
+    """
+    import os
+    from qdrant_client import QdrantClient
+
+    qdrant_url = os.environ.get("QDRANT_URL", "http://localhost:6333")
+    collection = os.environ.get("RAG_COLLECTION", "ai_engineering_docs")
+    embed_model_name = os.environ.get("RAG_EMBED_MODEL", "BAAI/bge-small-en-v1.5")
+
+    # Cache lazy: el modelo y el cliente se cargan una sola vez por proceso
+    global _rag_model, _rag_qdrant
+    try:
+        if "_rag_model" not in globals() or _rag_model is None:
+            from sentence_transformers import SentenceTransformer
+            _rag_model = SentenceTransformer(embed_model_name)
+        if "_rag_qdrant" not in globals() or _rag_qdrant is None:
+            _rag_qdrant = QdrantClient(qdrant_url)
+    except Exception as e:
+        return f"[ERROR] RAG no disponible (init falló): {e}"
+
     last_err = None
     for attempt in range(retries + 1):
         try:
-            req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
-            with urllib.request.urlopen(req, timeout=timeout) as resp:
-                result = json.loads(resp.read().decode("utf-8"))
-                answer = result.get("answer", "")
-                sources = result.get("sources", [])
-                out = answer
-                if sources:
-                    out += "\n\n__Fuentes:__"
-                    for s in sources:
-                        out += f"\n- {s.get('title', 'doc')}: {s.get('snippet', '')[:100]}..."
-                return out
-        except urllib.error.HTTPError as e:
-            body = e.read().decode("utf-8", errors="replace")
-            return f"[ERROR] RAG API HTTP {e.code}: {body[:200]}"
-        except (urllib.error.URLError, TimeoutError, ConnectionError) as e:
+            q_emb = _rag_model.encode(query, normalize_embeddings=True).tolist()
+            res = _rag_qdrant.query_points(
+                collection_name=collection,
+                query=q_emb,
+                limit=k,
+            )
+            points = res.points
+            if not points:
+                return "No se encontraron documentos relevantes en la knowledge base."
+
+            out = []
+            for i, p in enumerate(points, 1):
+                payload = p.payload or {}
+                text = (payload.get("text") or "").strip()
+                source = payload.get("source", "doc")
+                category = payload.get("category", "")
+                score = p.score
+                # Cabecera de fuente + texto (recortado para no ahogar al modelo)
+                snippet = text[:600] + ("..." if len(text) > 600 else "")
+                out.append(f"[Fuente {i} | {category} | score={score:.3f} | {source}]\n{snippet}")
+
+            header = f"Encontrados {len(out)} documentos relevantes para: \"{query}\"\n"
+            return header + "\n\n---\n\n".join(out)
+        except Exception as e:
             last_err = e
             if attempt < retries:
                 time.sleep(0.5 * (2 ** attempt))
                 continue
-        except Exception as e:
-            return f"[ERROR] RAG API no disponible: {e}"
-    return f"[ERROR] RAG API no responde tras {retries+1} intentos: {last_err}"
+    return f"[ERROR] RAG no responde tras {retries+1} intentos: {last_err}"
 
 
 def _qdrant_get(path: str, timeout: int = 5, retries: int = 1) -> dict:

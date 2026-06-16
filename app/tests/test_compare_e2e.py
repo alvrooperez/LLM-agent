@@ -42,16 +42,23 @@ pytestmark = pytest.mark.skipif(
 
 def test_compare_e2e_returns_events_from_both_models():
     """El endpoint emite eventos tagged por modelo."""
+    # Login primero para obtener JWT
+    login_req = urllib.request.Request(
+        "http://localhost:8090/api/auth/login",
+        data=json.dumps({"username": "admin", "password": "admin123"}).encode(),
+        headers={"Content-Type": "application/json", "User-Agent": "e2e-compare/1.0"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(login_req, timeout=5) as r:
+            token = json.loads(r.read())["token"]
+    except Exception as e:
+        pytest.skip(f"login failed: {e}")
+
     data = json.dumps({
         "message": "ok",
         "models": ["qwen2.5:3b", "qwen2.5-rag-ft"],
     }).encode()
-    req = urllib.request.Request(
-        "http://localhost:8090/api/chat/compare",
-        data=data,
-        headers={"Content-Type": "application/json", "User-Agent": "e2e-compare/1.0"},
-        method="POST",
-    )
     # Usar socket raw para evitar problemas con urllib + chunked encoding
     import socket
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -62,6 +69,7 @@ def test_compare_e2e_returns_events_from_both_models():
         b"Host: localhost:8090\r\n"
         b"Content-Type: application/json\r\n"
         b"User-Agent: e2e-compare/1.0\r\n"
+        b"Authorization: Bearer " + token.encode() + b"\r\n"
         b"Content-Length: " + str(len(data)).encode() + b"\r\n"
         b"Connection: close\r\n"
         b"\r\n" + data

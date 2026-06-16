@@ -71,24 +71,23 @@ def test_ollama_chat_streaming_handles_empty_lines(mock_urlopen):
 
 @patch("agent.run.ollama_chat")
 def test_run_agent_streaming_simple_response(mock_ollama):
-    """Sin tool calls: yield 'thinking' + tokens + 'done'."""
+    """Sin tool calls: yield 'thinking' + tokens (reusando respuesta) + 'done'.
+    Ya NO se hace segunda llamada a Ollama — reusamos el content de ollama_chat
+    y lo emitimos en chunks para simular streaming (optimizacion de latencia)."""
     # Mock: primera llamada devuelve respuesta sin tool calls
     mock_ollama.return_value = {
-        "message": {"content": "", "tool_calls": []},
+        "message": {"content": "La respuesta final", "tool_calls": []},
     }
-    # Mock streaming: 3 tokens
-    with patch("agent.run.ollama_chat_streaming") as mock_stream:
-        mock_stream.return_value = [
-            ("La ", False, {}),
-            ("respuesta ", False, {}),
-            ("final", True, {}),
-        ]
-        events = list(run_agent_streaming("hola", model="qwen2.5:3b"))
+    events = list(run_agent_streaming("hola", model="qwen2.5:3b"))
 
-    # Eventos esperados: thinking, then tokens, then done
+    # ollama_chat llamado 1 sola vez (no hay segunda llamada a streaming)
+    assert mock_ollama.call_count == 1
+
+    # Eventos: thinking, then tokens (chunks de 4 chars), then done
     types = [e["type"] for e in events]
     assert "thinking" in types
-    assert types.count("token") == 3
+    # "La respuesta final" (19 chars) con chunk_size=4 → 5 chunks
+    assert types.count("token") == 5
     assert types[-1] == "done"
 
     # done event tiene el answer completo
@@ -100,9 +99,10 @@ def test_run_agent_streaming_simple_response(mock_ollama):
 
 @patch("agent.run.ollama_chat")
 def test_run_agent_streaming_with_tool_call(mock_ollama):
-    """Con tool calls: yield thinking, tool_call, then streaming done."""
+    """Con tool calls: yield thinking, tool_call, then reusamos content de
+    la siguiente ollama_chat (sin segunda llamada a ollama_chat_streaming)."""
     # Primera iteracion: tool call (get_gpu_stats)
-    # Segunda iteracion: respuesta sin tool calls (entra a streaming)
+    # Segunda iteracion: respuesta sin tool calls (se reusa el content)
     mock_ollama.side_effect = [
         {
             "message": {
@@ -113,20 +113,13 @@ def test_run_agent_streaming_with_tool_call(mock_ollama):
             },
         },
         {
-            "message": {"content": "", "tool_calls": []},  # no more tool calls
+            "message": {"content": "GPU: 4GB", "tool_calls": []},  # final
         },
     ]
-    # Mock streaming para la respuesta final
-    with patch("agent.run.ollama_chat_streaming") as mock_stream:
-        mock_stream.return_value = [
-            ("GPU: 4GB", True, {}),
-        ]
-        events = list(run_agent_streaming("estado GPU", model="qwen2.5:3b"))
+    events = list(run_agent_streaming("estado GPU", model="qwen2.5:3b"))
 
-    # ollama_chat llamado 2 veces (1 tool call + 1 final check antes de streaming)
+    # ollama_chat llamado 2 veces (1 tool call + 1 final), NO se llama streaming
     assert mock_ollama.call_count == 2
-    # ollama_chat_streaming llamado 1 vez (respuesta final)
-    assert mock_stream.call_count == 1
 
     types = [e["type"] for e in events]
     assert "tool_call" in types
@@ -137,6 +130,10 @@ def test_run_agent_streaming_with_tool_call(mock_ollama):
     assert tool_call_event["name"] == "get_gpu_stats"
     assert "result" in tool_call_event
     assert "duration_ms" in tool_call_event
+
+    # La respuesta final incluye el texto reusado
+    done = events[-1]
+    assert done["answer"] == "GPU: 4GB"
 
 
 @patch("agent.run.ollama_chat")
@@ -153,7 +150,8 @@ def test_run_agent_streaming_ollama_error(mock_ollama):
 
 @patch("agent.run.ollama_chat")
 def test_run_agent_streaming_max_iter(mock_ollama):
-    """Si se alcanza MAX_ITER, yield done con aviso."""
+    """Si el modelo entra en loop (mismas tools 2 iter seguidas), early-stop
+    yield done con aviso (en vez de esperar MAX_ITER)."""
     # Siempre devuelve tool calls
     mock_ollama.return_value = {
         "message": {
@@ -166,4 +164,7 @@ def test_run_agent_streaming_max_iter(mock_ollama):
     events = list(run_agent_streaming("loop infinito"))
     types = [e["type"] for e in events]
     assert types[-1] == "done"
-    assert "Limite" in events[-1]["answer"] or "iteraciones" in events[-1]["answer"]
+    # Early-stop message (preferred) o el MAX_ITER message
+    answer = events[-1]["answer"]
+    assert ("Paré" in answer and "dos veces seguidas" in answer) or \
+           ("Limite" in answer or "iteraciones" in answer)

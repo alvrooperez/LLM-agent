@@ -37,7 +37,7 @@ os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 import tools.implementations  # noqa: F401
 from tools.registry import TOOL_REGISTRY, get_tools_schema, get_system_prompt
 
-MAX_ITER = int(os.environ.get("MAX_ITER", "5"))
+MAX_ITER = int(os.environ.get("MAX_ITER", "3"))
 
 
 # ── Ollama helpers ──────────────────────────────────────────────────────────────
@@ -184,9 +184,16 @@ def execute_tool_call(tool_call: dict) -> str:
 
 
 def format_response(text: str) -> str:
-    """Limpia el texto de la respuesta del modelo (tool markers, etc)."""
+    """Limpia el texto de la respuesta del modelo (tool markers, tokens de control)."""
     # Quitar bloques de tool call del texto visible
     cleaned = re.sub(r"<tool_call>.*?</tool_call>", "", text, flags=re.DOTALL).strip()
+    # Quitar tokens de control que el modelo emite para saber que termino
+    # (el system prompt los usa, pero el usuario no deberia verlos)
+    cleaned = re.sub(r"\[(?:TAREA|TEMA)\s*COMPLETADA\]", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\[TAREA_COMPLETADA\]", "", cleaned)
+    cleaned = re.sub(r"\[TEMA_COMPLETADO\]", "", cleaned)
+    # Quitar espacios duplicados
+    cleaned = re.sub(r"\n{3,}", "\n\n", cleaned).strip()
     return cleaned
 
 
@@ -207,6 +214,8 @@ def run_agent(user_query: str, model: str = "qwen2.5:3b", verbose: bool = True) 
 
     iterations = 0
     tool_calls_made = []
+    prev_tool_signature = None
+    stuck_iterations = 0  # Conteo de iteraciones donde el modelo llamó el mismo set de tools
 
     while iterations < MAX_ITER:
         iterations += 1
@@ -237,6 +246,28 @@ def run_agent(user_query: str, model: str = "qwen2.5:3b", verbose: bool = True) 
         # Si no hay tool_calls en la respuesta, puede estar en el content como texto
         if not tool_calls_response:
             tool_calls_response = parse_tool_calls(content)
+
+        # Early stop: si el modelo insiste con el mismo set de tools 2 iteraciones
+        # seguidas, está oscilando. Paramos y devolvemos lo que tengamos.
+        if tool_calls_response:
+            current_signature = tuple(sorted(tc.get("name", "") for tc in tool_calls_response))
+            if current_signature == prev_tool_signature:
+                stuck_iterations += 1
+            else:
+                stuck_iterations = 0
+            prev_tool_signature = current_signature
+            if stuck_iterations >= 1 and iterations >= 2:
+                # 2 iteraciones consecutivas con las mismas tools = loop
+                if verbose:
+                    print(f"  ⚠ Loop detectado (tools={list(current_signature)}), parando")
+                messages.append({"role": "assistant", "content": content})
+                fallback = (content.strip() + "\n\n"
+                            "(Paré porque las herramientas devolvieron lo mismo dos veces seguidas.)").strip()
+                return {
+                    "answer": format_response(fallback),
+                    "tool_calls": tool_calls_made,
+                    "iterations": iterations,
+                }
 
         if tool_calls_response:
             # Filtrar tool calls con name válida
@@ -306,6 +337,8 @@ def run_agent_streaming(user_query: str, model: str = "qwen2.5:3b", verbose: boo
     iterations = 0
     tool_calls_made = []
     t_start = time.time()
+    prev_tool_signature = None
+    stuck_iterations = 0
 
     while iterations < MAX_ITER:
         iterations += 1
@@ -323,6 +356,23 @@ def run_agent_streaming(user_query: str, model: str = "qwen2.5:3b", verbose: boo
         tool_calls_response = [normalize_tool_call(tc) for tc in msg_data.get("tool_calls", [])]
         if not tool_calls_response:
             tool_calls_response = parse_tool_calls(content)
+
+        # Early stop: mismas tools 2 iter seguidas -> loop
+        if tool_calls_response:
+            current_signature = tuple(sorted(tc.get("name", "") for tc in tool_calls_response))
+            if current_signature == prev_tool_signature:
+                stuck_iterations += 1
+            else:
+                stuck_iterations = 0
+            prev_tool_signature = current_signature
+            if stuck_iterations >= 1 and iterations >= 2:
+                messages.append({"role": "assistant", "content": content})
+                fallback = (content.strip() + "\n\n"
+                            "(Paré porque las herramientas devolvieron lo mismo dos veces seguidas.)").strip()
+                yield {"type": "done", "answer": format_response(fallback),
+                       "tool_calls": tool_calls_made, "iterations": iterations,
+                       "elapsed_sec": round(time.time() - t_start, 2)}
+                return
 
         if tool_calls_response:
             valid_tcs = [tc for tc in tool_calls_response if tc.get("name")]
@@ -345,21 +395,20 @@ def run_agent_streaming(user_query: str, model: str = "qwen2.5:3b", verbose: boo
                        "result": result, "duration_ms": duration_ms}
                 messages.append({"role": "tool", "name": tc["name"], "content": result})
         else:
-            # Respuesta final SIN tool calls -> STREAMING
-            # Ya tenemos el contenido completo; re-llamamos a Ollama en streaming
-            # para emitir token por token. Es un poco ineficiente (doble llamada)
-            # pero garantiza que el modelo produce la misma respuesta.
-            # NOTA: Ollama puede ser no-determinista con temperature>0, asi que
-            # hacemos la llamada streaming directamente con el MISMO messages.
-            full_text = ""
-            for token, is_done, _ in ollama_chat_streaming(messages, model=model):
-                if token:
-                    full_text += token
-                    yield {"type": "token", "text": token}
-                if is_done:
-                    break
-
+            # Respuesta final SIN tool calls -> REUSAMOS la respuesta que ya
+            # tenemos de ollama_chat() y la emitimos en chunks para dar la
+            # sensacion de streaming (cortamos en ~5 chars para que se vea
+            # fluido). Evita una segunda llamada a Ollama (~2-3s ahorrados
+            # warm, ~7-10s cold) sin perder determinismo.
+            full_text = content
             messages.append({"role": "assistant", "content": full_text})
+
+            # Emitir en chunks pequeños para simular streaming real
+            # (chunk_size=4 da ~15-30 tokens por segundo en respuestas de 100 tokens)
+            chunk_size = 4
+            for i in range(0, len(full_text), chunk_size):
+                yield {"type": "token", "text": full_text[i:i + chunk_size]}
+
             answer = format_response(full_text)
             yield {"type": "done", "answer": answer,
                    "tool_calls": tool_calls_made, "iterations": iterations,
